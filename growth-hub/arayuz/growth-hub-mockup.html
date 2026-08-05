@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Growth Hub — Mecra Seçim Sistemi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap&subset=latin,latin-ext" rel="stylesheet">
+<style>
+:root{
+  --paper:#E6E9EC;
+  --paper-2:#F2F4F6;
+  --ink:#111A21;
+  --ink-2:#41525E;
+  --ink-3:#7E8D98;
+  --rule:#C3CAD1;
+  --rule-2:#D6DBE0;
+  --signal:#15604F;
+  --signal-soft:#15604F1a;
+  --warn:#9C5A18;
+  --warn-soft:#9C5A181a;
+  --bad:#98302E;
+  --bad-soft:#98302E1a;
+  --link:#23457F;
+  --band:#23457F26;
+  --shadow:0 1px 0 rgba(17,26,33,.06), 0 8px 24px -18px rgba(17,26,33,.5);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  background-image:radial-gradient(circle at 1px 1px, rgba(17,26,33,.05) 1px, transparent 0);
+  background-size:22px 22px;
+  color:var(--ink);
+  font-family:'Instrument Sans',system-ui,sans-serif;
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif;font-weight:600;margin:0;letter-spacing:-.015em}
+
+/* ---------- shell ---------- */
+.shell{display:grid;grid-template-columns:216px 1fr;min-height:100vh}
+.rail{
+  border-right:1px solid var(--rule);
+  background:linear-gradient(180deg,#DFE3E7,#E9ECEF);
+  padding:22px 0 20px;position:sticky;top:0;height:100vh;overflow:auto;
+}
+.brand{padding:0 20px 18px;border-bottom:1px solid var(--rule)}
+.brand h1{font-size:21px;line-height:1.1}
+.brand .sub{font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-top:7px}
+.flowlab{padding:20px 20px 8px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.nav{display:flex;flex-direction:column}
+.nav button{
+  all:unset;cursor:pointer;display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:baseline;
+  padding:10px 20px;font-size:13.5px;color:var(--ink-2);border-left:2px solid transparent;
+}
+.nav button .n{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-3)}
+.nav button:hover{background:#ffffff5c;color:var(--ink)}
+.nav button:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
+.nav button[aria-current="true"]{background:#fff;color:var(--ink);font-weight:600;border-left-color:var(--ink)}
+.railnote{margin:22px 20px 0;padding-top:14px;border-top:1px solid var(--rule);font-size:11px;color:var(--ink-3);line-height:1.45}
+
+.main{padding:26px 34px 70px;max-width:1240px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-bottom:1px solid var(--rule);padding-bottom:14px;margin-bottom:22px;flex-wrap:wrap}
+.head h2{font-size:26px}
+.head p{margin:6px 0 0;color:var(--ink-2);font-size:13px;max-width:62ch}
+.stamp{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+
+.panel{background:var(--paper-2);border:1px solid var(--rule-2);border-radius:3px;box-shadow:var(--shadow)}
+.panel > .ph{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--rule-2);flex-wrap:wrap}
+.ph h3{font-size:15px}
+.ph .hint{font-size:11.5px;color:var(--ink-3)}
+.pb{padding:16px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:1.35fr 1fr}
+section[hidden]{display:none}
+
+/* ---------- stat ---------- */
+.stat{background:var(--paper-2);border:1px solid var(--rule-2);border-radius:3px;padding:14px 15px;box-shadow:var(--shadow)}
+.stat .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-.02em;margin-top:6px;line-height:1}
+.stat .d{font-size:11.5px;color:var(--ink-2);margin-top:7px}
+.stat.alert{border-color:#9C5A1855;background:linear-gradient(180deg,#FBF3E9,#F7EFE4)}
+.stat.alert .v{color:var(--warn)}
+
+/* ---------- signature: belirsizlik çubuğu ---------- */
+.iv{position:relative;height:22px;min-width:132px}
+.iv .axis{position:absolute;left:0;right:0;top:10px;height:1px;background:var(--rule)}
+.iv .tickzero{position:absolute;top:4px;width:1px;height:13px;background:var(--ink-3);left:50%}
+.iv .band{position:absolute;top:6px;height:9px;background:var(--band);border-left:1px solid #23457F80;border-right:1px solid #23457F80;border-radius:1px}
+.iv .pt{position:absolute;top:2px;width:2px;height:17px;background:var(--ink)}
+.iv.s-strong .band{background:var(--signal-soft);border-color:#15604F80}
+.iv.s-strong .pt{background:var(--signal)}
+.iv.s-weak .band{background:var(--bad-soft);border-color:#98302E80}
+.iv.s-weak .pt{background:var(--bad)}
+.iv.thin{opacity:.42}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse}
+th{
+  text-align:left;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3);
+  font-weight:600;padding:0 10px 9px;border-bottom:1px solid var(--rule);white-space:nowrap;
+}
+td{padding:10px;border-bottom:1px solid var(--rule-2);vertical-align:middle;font-size:13px}
+tbody tr:hover{background:#fff}
+tr.dim td{color:var(--ink-3)}
+.num{text-align:right;font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-size:12.5px}
+.pub{font-weight:600}
+.pub small{display:block;font-weight:400;color:var(--ink-3);font-size:11px;margin-top:2px}
+
+.tag{display:inline-block;font-size:10.5px;letter-spacing:.05em;padding:2px 7px;border-radius:2px;border:1px solid;white-space:nowrap}
+.t-ok{color:var(--signal);border-color:#15604F55;background:var(--signal-soft)}
+.t-warn{color:var(--warn);border-color:#9C5A1855;background:var(--warn-soft)}
+.t-bad{color:var(--bad);border-color:#98302E55;background:var(--bad-soft)}
+.t-neutral{color:var(--ink-2);border-color:var(--rule);background:#fff}
+.t-explore{color:var(--link);border-color:#23457F55;background:#23457F14}
+
+.trend{font-family:'IBM Plex Mono',monospace;font-size:12px}
+.up{color:var(--signal)} .down{color:var(--bad)} .flat{color:var(--ink-3)}
+
+/* ---------- controls ---------- */
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select,input[type=text]{
+  font-family:'Instrument Sans',sans-serif;font-size:12.5px;color:var(--ink);
+  background:#fff;border:1px solid var(--rule);border-radius:2px;padding:6px 9px;
+}
+select:focus,input:focus,button:focus-visible{outline:2px solid var(--link);outline-offset:1px}
+label.lbl{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+input[type=range]{accent-color:var(--link);width:120px}
+.btn{
+  all:unset;cursor:pointer;font-size:12.5px;font-weight:500;padding:7px 14px;border-radius:2px;
+  border:1px solid var(--ink);color:var(--ink);background:#fff;
+}
+.btn:hover{background:var(--ink);color:var(--paper-2)}
+.btn.ghost{border-color:var(--rule);color:var(--ink-2)}
+.btn.ghost:hover{background:#fff;color:var(--ink);border-color:var(--ink)}
+
+/* ---------- maturity grid ---------- */
+.mat{display:grid;grid-template-columns:150px repeat(5,1fr);gap:3px;font-size:11px}
+.mat .hd{font-size:9.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);padding:0 0 6px;text-align:center}
+.mat .rw{display:flex;align-items:center;font-size:12px;color:var(--ink-2);padding-right:8px}
+.cell{height:38px;display:flex;align-items:center;justify-content:center;border:1px solid var(--rule-2);
+  font-family:'IBM Plex Mono',monospace;font-size:11.5px;border-radius:2px;background:#fff;color:var(--ink-3);cursor:default}
+.cell[data-lv="0"]{background:#fff;border-style:dashed}
+.cell[data-lv="1"]{background:#15604F14;color:var(--ink-2)}
+.cell[data-lv="2"]{background:#15604F30;color:var(--ink)}
+.cell[data-lv="3"]{background:#15604F55;color:var(--ink);font-weight:600}
+
+/* ---------- misc ---------- */
+.checks li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--rule-2);font-size:12.5px}
+.checks{list-style:none;margin:0;padding:0}
+.file{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule-2)}
+.file .fn{font-size:13px;font-weight:500}
+.file .fm{font-size:11px;color:var(--ink-3);margin-top:2px}
+.why{font-size:11.5px;color:var(--ink-2);line-height:1.45}
+.why b{font-weight:600;color:var(--ink)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:12.5px}
+.kv dt{color:var(--ink-3)}
+.kv dd{margin:0;font-weight:500}
+.note{font-size:11.5px;color:var(--ink-3);line-height:1.5;margin:12px 0 0}
+.bar{height:7px;background:var(--rule-2);border-radius:1px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.bar.over i{background:var(--warn)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--ink-3);margin-top:12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.sw{width:16px;height:9px;border-radius:1px;display:inline-block}
+.mockbar{background:var(--ink);color:var(--paper);font-size:11px;letter-spacing:.06em;padding:7px 34px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.mockbar b{font-weight:600}
+@media (max-width:1000px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;display:grid;grid-template-columns:1fr}
+  .nav{flex-direction:row;overflow:auto}
+  .nav button{white-space:nowrap;border-left:none;border-bottom:2px solid transparent}
+  .nav button[aria-current="true"]{border-left-color:transparent;border-bottom-color:var(--ink)}
+  .main{padding:20px 16px 60px}
+  .g4,.g3,.g2{grid-template-columns:1fr}
+  .mat{grid-template-columns:110px repeat(5,1fr);font-size:10px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .fade{animation:fade .32s ease both}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<div class="mockbar">
+  <span><b>GERÇEK VERİ</b> — 8 kapanış raporundan üretildi: Uludağ, Züber, Bitaksi, Dardanel, TLC Klima. Sadece “Brief → öneri” ve “Öneriden farklar” ekranları örnektir.</span>
+  <span>Growth Hub · Growity · v0 taslak</span>
+</div>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="brand">
+      <h1>Growth&nbsp;Hub</h1>
+      <div class="sub">Mecra seçim sistemi</div>
+    </div>
+    <div class="flowlab">Akış</div>
+    <nav class="nav" id="nav">
+      <button data-t="ov" aria-current="true"><span class="n">—</span><span>Genel bakış</span></button>
+      <button data-t="up"><span class="n">01</span><span>Rapor yükle</span></button>
+      <button data-t="sc"><span class="n">02</span><span>Mecra karnesi</span></button>
+      <button data-t="br"><span class="n">03</span><span>Brief &rarr; öneri</span></button>
+      <button data-t="dv"><span class="n">04</span><span>Öneriden farklar</span></button>
+    </nav>
+    <p class="railnote">Puanlar her gece yeniden hesaplanır. Karneye sadece <b>kapanış raporları</b> girer. Kampanya sürerken yüklenen raporlar puanı değiştirmez.</p>
+  </aside>
+
+  <main class="main">
+
+  <!-- ============ GENEL BAKIŞ ============ -->
+  <section id="ov" class="fade">
+    <div class="head">
+      <div>
+        <h2>Genel bakış</h2>
+        <p>Sistem 8 kapanış raporundan öğrendi: 132 satır, 25,7 milyon ₺ harcama, 4 sektör. Bu ilk verinin ne söylediği ve neyin eksik olduğu aşağıda.</p>
+      </div>
+      <div class="stamp">8 kapanış raporu · 04.08.2026</div>
+    </div>
+
+    <div class="grid g4" style="margin-bottom:16px">
+      <div class="stat"><div class="k">Okunan kapanış raporu</div><div class="v mono">8</div><div class="d">5 marka · 132 satır</div></div>
+      <div class="stat"><div class="k">Puanlanan yayıncı</div><div class="v mono">49</div><div class="d">37 ana grup altında</div></div>
+      <div class="stat"><div class="k">Güvenilir alan oranı</div><div class="v mono">3%</div><div class="d">63 alanın sadece 2 tanesinde yeterli veri var</div></div>
+      <div class="stat alert"><div class="k">Açık uyarı</div><div class="v mono">7</div><div class="d">8 kampanyanın 7'sinde bütçe yığılması</div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="ph">
+          <h3>Hangi alanda ne kadar bilgimiz var?</h3>
+          <span class="hint">Kutudaki sayı, o alanda kaç yayın satırımız olduğunu gösterir. Kesik çizgili kutular öneri vermeye yetmiyor.</span>
+        </div>
+        <div class="pb">
+          <div class="mat" id="mat"></div>
+          <div class="legend">
+            <span><i class="sw" style="background:#fff;border:1px dashed var(--rule-2)"></i> 4'ten az satır — benzer işlerden tahmin</span>
+            <span><i class="sw" style="background:#15604F30"></i> 4–7 satır — emin değiliz</span>
+            <span><i class="sw" style="background:#15604F55"></i> 8 ve üzeri — kendi verisi yeterli</span>
+          </div>
+          <p class="note">Bir alanda az kampanya varsa sistem susmaz. Puanı benzer alanlardan tahmin eder (önce FMCG'nin geneli, sonra tüm sektörler) ve bunu size söyler. Öneri ekranında bu satırlar soluk görünür.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h3>Bu veri neyi söylüyor</h3><span class="hint">8 rapordan çıkan gerçek bulgular</span></div>
+        <div class="pb">
+          <ul class="checks">
+            <li><span><b>TLC Klima</b> · İndirim kampanyası<br><span class="why">Bütçenin %73'ü tek gruba (Google) gitmiş. Üst sınır %30.</span></span><span class="tag t-bad">Bütçe yığılması</span></li>
+            <li><span><b>Uludağ F4 Türkiye</b><br><span class="why">Bütçenin %58'i tek gruba gitmiş.</span></span><span class="tag t-bad">Bütçe yığılması</span></li>
+            <li><span><b>Reklam filmi kodu</b><br><span class="why">132 satırın 132'sinde boş. Kötü sonucun yayıncıdan mı filmden mi geldiği ayrılamıyor.</span></span><span class="tag t-bad">En büyük eksik</span></li>
+            <li><span><b>Dardanel Sardalya</b><br><span class="why">15 yayınlanan satırın 12'si söz verdiğinin yarısından azını yayınlamış.</span></span><span class="tag t-warn">Düşük yayınlanma</span></li>
+            <li><span><b>Bitaksi Kasım</b><br><span class="why">12 satırın 12'sinde gerçekleşen birim fiyat plandan kopyalanmış. Fiyat farkı ölçülemiyor.</span></span><span class="tag t-warn">Ölçüm yok</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ YÜKLEME ============ -->
+  <section id="up" hidden>
+    <div class="head">
+      <div>
+        <h2>Rapor yükle</h2>
+        <p>Doldurduğunuz Excel'i yükleyin. Sistem 12 kontrolü baştan yapar. Eksik varsa dosya kaydedilmez ve hangi satırda ne eksik olduğunu söyler.</p>
+      </div>
+      <div class="stamp">Kuyruk · 4 dosya</div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="ph"><h3>Bu oturumda yüklenenler</h3><button class="btn ghost">Dosya seç</button></div>
+        <div class="pb">
+          <div class="file">
+            <div><div class="fn">ULUD-HAVA-202605 · Hava Tam Portakallı</div><div class="fm">22 satır · FMCG › İçecek · 8.749.946 ₺</div></div>
+            <div class="tag t-warn">4 eksik</div><div class="tag t-neutral">Kaydedildi</div>
+          </div>
+          <div class="file">
+            <div><div class="fn">TLCK-NDIR-202508 · İndirim Kampanyası</div><div class="fm">13 satır · Beyaz Eşya › İklimlendirme · 1.037.665 ₺</div></div>
+            <div class="tag t-bad">5 eksik</div><div class="tag t-neutral">Düzeltme bekliyor</div>
+          </div>
+          <div class="file">
+            <div><div class="fn">ZBER-GERE-202511 · Gerçekten Nasıl Yedik</div><div class="fm">27 satır · FMCG › Hazır Yiyecek · 4.351.256 ₺</div></div>
+            <div class="tag t-warn">4 eksik</div><div class="tag t-neutral">Kaydedildi</div>
+          </div>
+          <div class="file">
+            <div><div class="fn">BITA-BRAN-202511 · Branding</div><div class="fm">12 satır · Teknoloji › Ulaşım · 2.735.510 ₺</div></div>
+            <div class="tag t-warn">4 eksik</div><div class="tag t-neutral">Kaydedildi</div>
+          </div>
+          <p class="note">Bu sekiz dosyanın toplamı kaynak raporlarla birebir tutuyor: 25.676.102 ₺. Aynı kampanyayı tekrar yüklerseniz eskisi silinmez, yenisi ayrı kaydedilir.</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h3>TLCK-NDIR-202508 · İndirim Kampanyası</h3><span class="tag t-bad">5 eksik var</span></div>
+        <div class="pb">
+          <ul class="checks">
+            <li><span>Fiyat tipi (CPM/CPC) yazılmamış satır</span><span class="tag t-ok">0</span></li>
+            <li><span>Tutarın nereden geldiği yazılmamış satır</span><span class="tag t-ok">0</span></li>
+            <li><span>Gerçekleşen birim fiyatı plandan kopyalanmış satır</span><span class="tag t-warn">3</span></li>
+            <li><span>Bütçe toplamı ile anlaşılan tutar arasındaki fark</span><span class="tag t-bad">880.200&nbsp;₺</span></li>
+            <li><span>Durumu ile rakamı birbirini tutmayan satır</span><span class="tag t-ok">0</span></li>
+            <li><span>Söz verdiğinin yarısından azını ya da 1,5 katını yayınlayan satır</span><span class="tag t-warn">6 satır</span></li>
+            <li><span>Fiyatı plandan %25'ten fazla farklı olan satır</span><span class="tag t-warn">6</span></li>
+            <li><span>Sebebi yazılmamış değişiklik</span><span class="tag t-ok">0</span></li>
+            <li><span>Hangi reklam filmi olduğu yazılmamış satır</span><span class="tag t-bad">13</span></li>
+            <li><span>Yayın tarihi kampanya döneminden türetilen satır</span><span class="tag t-warn">13</span></li>
+          </ul>
+          <p class="note"><b>Ne yapmanız gerekiyor:</b> Bu dosyada bütçenin %73'ü tek gruba gitmiş, 13 satırda reklam filmi kodu yok ve künyedeki bütçe ile satırların toplamı arasında 880.200 ₺ fark var. Bu farkın ne olduğu (adserver, AHB, vergi) dosyada yazmıyor. Eksikleri tamamlayıp tekrar yükleyin.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KARNE ============ -->
+  <section id="sc" hidden>
+    <div class="head">
+      <div>
+        <h2>Mecra karnesi</h2>
+        <p>Puan, <b>aynı sektörde ve aynı yayın türünde</b> çalışan diğer yayıncılarla karşılaştırmadır. <b>100 = ortalama.</b> Video ile tıklama işleri asla birbiriyle karşılaştırılmaz. Çubuk ne kadar emin olduğumuzu gösterir: geniş çubuk, az veri demektir.</p>
+      </div>
+      <div class="stamp">8 kapanış raporundan hesaplandı</div>
+    </div>
+
+    <div class="panel">
+      <div class="ph">
+        <div class="controls">
+          <label class="lbl" for="f-sec">Sektör</label>
+          <select id="f-sec">
+            <option value="icecek">FMCG › İçecek</option>
+            <option value="hazir-yiyecek">FMCG › Hazır Yiyecek</option>
+            <option value="ulasim">Teknoloji › Ulaşım Uygulaması</option>
+            <option value="iklim">Beyaz Eşya › İklimlendirme</option>
+          </select>
+          <label class="lbl" for="f-tur">Yayın türü</label>
+          <select id="f-tur"><option value="">Hepsi</option></select>
+          <label class="lbl" for="f-conf">En az kaç satır</label>
+          <input type="range" id="f-conf" min="0" max="8" value="0" step="1">
+          <span class="mono" id="f-conf-v" style="font-size:12px">hepsi</span>
+        </div>
+        <span class="hint" id="rowcount"></span>
+      </div>
+      <div class="pb" style="padding-top:6px;overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Yayıncı grubu</th><th>Yayıncı</th><th>Yayın türü</th><th class="num">Fiyat tipi</th>
+            <th>Puan ve ne kadar emin olduğumuz</th><th class="num">Puan</th>
+            <th class="num">Satır</th><th class="num">Kampanya</th><th class="num">Yayınlanma</th>
+            <th class="num">Önerilen birim maliyet</th><th class="num">Harcama ₺</th><th>Puan nereden geliyor</th>
+          </tr></thead>
+          <tbody id="sc-body"></tbody>
+        </table>
+        <p class="note" id="sc-note"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BRIEF ============ -->
+  <section id="br" hidden>
+    <div class="head">
+      <div>
+        <h2>Brief &rarr; öneri</h2>
+        <p>Sistem her satır için hem <b>önerilen birim maliyeti</b> hem de <b>önerilen bütçeyi</b> verir. İkisini de elle değiştirebilirsiniz; öneriden %15'ten fazla ayrılırsanız uyarı çıkar ve sebep sorulur. Plan onaylandıktan sonra gerekçeleriyle birlikte dışa aktarılabilir.</p>
+      </div>
+      <div class="stamp">ÖRNEK EKRAN · sistem kurulduğunda çalışır</div>
+    </div>
+
+    <div class="grid g2" style="margin-bottom:16px">
+      <div class="panel">
+        <div class="ph"><h3>Brief'ten anlaşılanlar</h3><span class="tag t-neutral">Kontrol edin</span></div>
+        <div class="pb">
+          <dl class="kv">
+            <dt>Müşteri / marka</dt><dd>Uludağ · Meyveli İçecek</dd>
+            <dt>Sektör</dt><dd>FMCG › İçecek › Gazlı ve Meyveli İçecek</dd>
+            <dt>Ne istiyoruz</dt><dd>Önce video izletmek, sonra çok kişiye ulaşmak</dd>
+            <dt>Dönem</dt><dd>01–30 Eylül 2026</dd>
+            <dt>Bütçe</dt><dd>4.200.000 ₺ (her şey dahil)</dd>
+            <dt>Kime ulaşacağız</dt><dd>25–54 yaş, evin alışverişini yapan kişi</dd>
+            <dt>Özel kural</dt><dd>Haber sitesi yorum bölümü olmasın · reklam en az %65 görünsün</dd>
+          </dl>
+          <p class="note">Yanlış okunan bir yer varsa düzeltin, öneri hemen yeniden hesaplanır. Brief'in kendisi saklanmaz, sadece buradaki bilgiler kaydedilir.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h3>Bütçe dağıtım kuralları</h3><span class="hint">Ajans kuralları</span></div>
+        <div class="pb">
+          <ul class="checks">
+            <li><span>Tek gruba en fazla</span><span class="mono">%30</span></li>
+            <li><span>Deneme payı</span><span class="mono">%8</span></li>
+            <li><span>En az kaç farklı format</span><span class="mono">3 format</span></li>
+            <li><span>Bir yayıncıya en az</span><span class="mono">50.000 ₺</span></li>
+            <li><span>Az tanıdığımız yayıncılara en fazla</span><span class="mono">%15</span></li>
+          </ul>
+          <p class="note">Deneme payı, az çalıştığımız yayıncılara ayrılan küçük bütçedir. Böylece yeni yayıncılar da şans bulur ve haklarında bilgi toplarız. Bu pay olmazsa sistem hep aynı yayıncıları önerir ve hiçbir zaman yenisini öğrenemeyiz.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="ph">
+        <h3>Önerilen dağılım</h3>
+        <div class="controls">
+          <span class="hint mono" id="alloc-sum"></span>
+          <button class="btn ghost" id="btn-reset">Öneriye dön</button>
+          <button class="btn ghost" id="btn-export">Planı dışa aktar</button>
+          <button class="btn" id="btn-send">Onaya gönder</button>
+        </div>
+      </div>
+      <div class="pb" style="padding-top:6px;overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Yayıncı grubu</th><th>Yayıncı</th><th>Yayın türü</th><th class="num">Fiyat tipi</th>
+            <th class="num">Puan</th><th class="num">Veri</th>
+            <th class="num">Önerilen<br>birim maliyet</th><th class="num">Sizin<br>birim maliyetiniz</th>
+            <th class="num">Sistem<br>bütçesi</th><th class="num">Sizin<br>bütçeniz</th>
+            <th class="num">Tahmini<br>adet</th><th>Durum</th>
+          </tr></thead>
+          <tbody id="al-body"></tbody>
+        </table>
+        <p class="note" id="al-note"></p>
+      </div>
+    </div>
+
+    <div class="panel" id="export-onizleme" hidden style="margin-top:16px">
+      <div class="ph">
+        <h3>Dışa aktarılan plan</h3>
+        <div class="controls">
+          <span class="hint" id="export-ozet"></span>
+          <button class="btn ghost" id="btn-kopyala">Panoya kopyala</button>
+        </div>
+      </div>
+      <div class="pb" style="padding-top:6px;overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Yayıncı grubu</th><th>Yayıncı</th><th>Yayın türü</th><th class="num">Fiyat tipi</th>
+            <th class="num">Puan</th><th class="num">Önerilen birim</th><th class="num">Seçilen birim</th>
+            <th class="num">Sistem bütçesi</th><th class="num">Onaylanan bütçe</th>
+            <th>Sistemin gerekçesi</th><th>Değişiklik sebebi</th>
+          </tr></thead><tbody></tbody>
+        </table>
+        <p class="note">Bu tablo indirilen dosyanın aynısıdır. Her satırda sistemin neden o yayıncıyı önerdiği ve
+        sizin neyi değiştirdiğiniz yazılıdır — müşteriye ya da yönetime plan sunarken kararın gerekçesi dosyanın içinde gelir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SAPMA ============ -->
+  <section id="dv" hidden>
+    <div class="head">
+      <div>
+        <h2>Öneriden farklar</h2>
+        <p>Sistemin önerisi ile ekibin seçimi arasındaki fark burada birikir. Amaç kimseyi suçlamak değil. Aynı yayıncıya sürekli fazla bütçe veriliyorsa bunu fark edip birlikte konuşabilmek.</p>
+      </div>
+      <div class="stamp">ÖRNEK EKRAN · öneri geçmişi biriktikçe dolar</div>
+    </div>
+
+    <div class="grid g3" style="margin-bottom:16px">
+      <div class="stat"><div class="k">Ortalama fark</div><div class="v mono">%14</div><div class="d">Bütçenin yüzdesi olarak</div></div>
+      <div class="stat"><div class="k">Sebebi yazılmış olanlar</div><div class="v mono">%82</div><div class="d">Hedef: %95 üzeri</div></div>
+      <div class="stat alert"><div class="k">Tekrar eden durum</div><div class="v mono">2</div><div class="d">Aynı yayıncıya 3 kereden fazla ek bütçe</div></div>
+    </div>
+
+    <div class="grid g2">
+      <div class="panel">
+        <div class="ph"><h3>Yayıncıya göre farklar</h3><span class="hint">Önerilenden fazla (+) ya da az (−)</span></div>
+        <div class="pb">
+          <table>
+            <thead><tr><th>Yayıncı</th><th class="num">Plan sayısı</th><th class="num">Ortalama fark</th><th>Durum</th><th>Sebebi yazılmış</th></tr></thead>
+            <tbody>
+              <tr><td class="pub">Mimeda</td><td class="num">7</td><td class="num">+38%</td><td><span class="tag t-bad">Hep fazla bütçe</span></td><td class="num">%29</td></tr>
+              <tr><td class="pub">Turkuvaz</td><td class="num">11</td><td class="num">+21%</td><td><span class="tag t-warn">Genelde fazla</span></td><td class="num">%64</td></tr>
+              <tr><td class="pub">Spotify</td><td class="num">9</td><td class="num">−17%</td><td><span class="tag t-neutral">Genelde az</span></td><td class="num">%89</td></tr>
+              <tr><td class="pub">TikTok</td><td class="num">14</td><td class="num">+4%</td><td><span class="tag t-ok">Dengeli</span></td><td class="num">%95</td></tr>
+              <tr><td class="pub">Now</td><td class="num">5</td><td class="num">−2%</td><td><span class="tag t-ok">Dengeli</span></td><td class="num">%100</td></tr>
+            </tbody>
+          </table>
+          <p class="note">Mimeda satırı bu sistemin kurulma sebebi. Söz verdiğinin çok azını yayınlıyor (karnede 42 puan). Buna rağmen ona sürekli fazla bütçe verilmiş ve bunun sadece %29'unda sebep yazılmış.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="ph"><h3>Ekiplere göre</h3><span class="hint">Öneriden ortalama fark</span></div>
+        <div class="pb">
+          <div id="team"></div>
+          <p class="note">Öneriyi değiştirmek kötü bir şey değil. Bazen planlamacı brief'i sistemden daha iyi bilir. Kötü olan, değişikliğin sebebinin yazılmaması. Bu tablo kimseyi değerlendirmek için değil, birlikte gözden geçirmek için var.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = (s,r)=> (r||document).querySelector(s);
+  const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+  const fmt = n => n.toLocaleString('tr-TR');
+
+  /* ---- navigation ---- */
+  const tabs = ['ov','up','sc','br','dv'];
+  $('#nav').addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    $$('#nav button').forEach(x=>x.setAttribute('aria-current', x===b));
+    tabs.forEach(t=>{
+      const el = $('#'+t);
+      el.hidden = (t !== b.dataset.t);
+      if(!el.hidden){ el.classList.remove('fade'); void el.offsetWidth; el.classList.add('fade'); }
+    });
+    window.scrollTo({top:0,behavior:'instant'});
+  });
+
+  /* ---- veri olgunluğu ---- */
+  const matCols = ["Preroll", "Kısa video", "Atlanamayan video", "Tıklama odaklı", "Diğer"];
+  const matRows = [
+    ['İçecek',[12, 19, 0, 0, 12]],
+    ['Hazır Yiyecek',[8, 12, 8, 6, 7]],
+    ['Ulaşım Uygulaması',[17, 0, 0, 0, 4]],
+    ['İklimlendirme',[2, 2, 1, 5, 0]]
+  ];
+  const lvl = n => n===0?0 : n<4?0 : n<8?1 : n<15?2:3;
+  let mh = '<div></div>' + matCols.map(c=>`<div class="hd">${c}</div>`).join('');
+  matRows.forEach(([name,vals])=>{
+    mh += `<div class="rw">${name}</div>` + vals.map(v=>
+      `<div class="cell" data-lv="${lvl(v)}" title="${name} · ${v} satır">${v||'—'}</div>`).join('');
+  });
+  $('#mat').innerHTML = mh;
+
+  /* ---- karne ---- */
+  const scoreData = {"hazir-yiyecek": [{g: "TRT", y: "TRT", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 108.3, n: 1, k: 1, tes: 105, o: 0.1903, ok: "bu yayıncı, bu sektör", h: 100000, son: "2025-11"}, {g: "Google", y: "Google", t: "Atlanamayan video", ot: "Non Skippable", tp: "CPM", i: 106.0, n: 1, k: 1, tes: 15, o: 67.6767, ok: "bu yayıncı, bu sektör", h: 297519, son: "2026-06"}, {g: "Ciner", y: "Ciner", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 105.7, n: 1, k: 1, tes: 112, o: 0.2144, ok: "bu yayıncı, bu sektör", h: 100000, son: "2025-11"}, {g: "Turkuvaz", y: "Turkuvaz", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 105.4, n: 1, k: 1, tes: 110, o: 0.2183, ok: "bu yayıncı, bu sektör", h: 100000, son: "2025-11"}, {g: "Demirören", y: "Demirören", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 100.5, n: 1, k: 1, tes: 103, o: 0.2901, ok: "bu yayıncı, bu sektör", h: 100000, son: "2025-11"}, {g: "Doğuş", y: "Doğuş", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 94.5, n: 2, k: 1, tes: 104, o: 0.3863, ok: "bu yayıncı, bu sektör", h: 200000, son: "2025-11"}, {g: "Acun Medya", y: "Acun Medya", t: "Atlanamayan video", ot: "Preroll Video - Atlanamayan", tp: "CPV", i: 90.2, n: 2, k: 1, tes: 110, o: 0.7446, ok: "bu yayıncı, bu sektör", h: 220000, son: "2025-11"}, {g: "Google", y: "Google", t: "CTV", ot: "Connected Tv", tp: "CPM", i: 100.9, n: 1, k: 1, tes: 25, o: 103.2524, ok: "bu yayıncı, bu sektör", h: 26244, son: "2026-06"}, {g: "Meta", y: "Meta", t: "Kısa video", ot: "Video Views", tp: "CPM", i: 117.1, n: 1, k: 1, tes: 57, o: 8.0057, ok: "bu yayıncı, bu sektör", h: 206547, son: "2026-06"}, {g: "X", y: "X", t: "Kısa video", ot: "Video view", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 199, o: 0.0202, ok: "bu yayıncı, bu sektör", h: 247275, son: "2025-11"}, {g: "TikTok", y: "TikTok", t: "Kısa video", ot: "Video Views", tp: "CPM", i: 112.8, n: 3, k: 2, tes: 80, o: 29.8072, ok: "bu yayıncı, bu sektör", h: 589486, son: "2026-06"}, {g: "Google", y: "Google", t: "Kısa video", ot: "Trueview in-stream", tp: "CPV", i: 100.5, n: 2, k: 1, tes: 99, o: 0.1719, ok: "bu yayıncı, bu sektör", h: 872539, son: "2025-11"}, {g: "TikTok", y: "TikTok", t: "Kısa video", ot: "Video View", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 143, o: 0.1746, ok: "bu yayıncı, bu sektör", h: 199302, son: "2025-11"}, {g: "Google", y: "Google", t: "Kısa video", ot: "Trueview for Action", tp: "CPM", i: 89.3, n: 1, k: 1, tes: 15, o: 119.5787, ok: "bu yayıncı, bu sektör", h: 37055, son: "2025-11"}, {g: "Meta", y: "Meta", t: "Kısa video", ot: "Video view - Thruplay", tp: "CPV", i: 83.8, n: 3, k: 1, tes: 54, o: 0.3341, ok: "bu yayıncı, bu sektör", h: 666088, son: "2025-11"}, {g: "Google", y: "Google", t: "Masthead", ot: "Masthead", tp: "CPM", i: 117.1, n: 1, k: 1, tes: 103, o: 8.9315, ok: "bu yayıncı, bu sektör", h: 134000, son: "2025-11"}, {g: "Google", y: "DV360", t: "Preroll", ot: "Preroll Video", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 183, o: 0.058, ok: "bu yayıncı, bu sektör", h: 177255, son: "2025-11"}, {g: "Can", y: "Can", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.9, n: 1, k: 1, tes: 59, o: 0.65, ok: "bu yayıncı, bu sektör", h: 43965, son: "2026-06"}, {g: "Now", y: "NOW", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 20, o: 0.69, ok: "bu yayıncı, bu sektör", h: 14735, son: "2026-06"}, {g: "Turkuvaz", y: "Turkuvaz", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 31, o: 0.69, ok: "bu yayıncı, bu sektör", h: 30944, son: "2026-06"}, {g: "Doğuş", y: "Doğuş", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 32, o: 0.69, ok: "bu yayıncı, bu sektör", h: 23762, son: "2026-06"}, {g: "TRT", y: "Trt1", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 33, o: 0.69, ok: "bu yayıncı, bu sektör", h: 24427, son: "2026-06"}, {g: "Disney", y: "Disney+", t: "Preroll", ot: "Preroll", tp: "CPV", i: 91.5, n: 1, k: 1, tes: 15, o: 1.7, ok: "bu yayıncı, bu sektör", h: 30778, son: "2026-06"}, {g: "HepsiBurada", y: "HepsiBurada", t: "Preroll", ot: "Preroll", tp: "CPV", i: 91.5, n: 1, k: 1, tes: 65, o: 1.7, ok: "bu yayıncı, bu sektör", h: 129365, son: "2026-06"}, {g: "Spotify", y: "Spotify", t: "Ses", ot: "Audio", tp: "CPM", i: 100.0, n: 1, k: 1, tes: 13, o: 220.0, ok: "bu yayıncı, bu sektör", h: 40011, son: "2026-06"}, {g: "X", y: "X", t: "Sponsorluk / özel format", ot: "First View + Spotlight Trend Takeover", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 111, o: 0.0722, ok: "bu yayıncı, bu sektör", h: 179553, son: "2025-11"}, {g: "Mimeda", y: "Mimeda", t: "Sponsorluk / özel format", ot: "Spoonsor Ürün", tp: "CPV", i: 90.0, n: 1, k: 1, tes: 11, o: 1.2045, ok: "bu yayıncı, bu sektör", h: 1290, son: "2026-06"}, {g: "TikTok", y: "TikTok", t: "Tıklama odaklı", ot: "Traffic", tp: "CPC", i: 130.0, n: 2, k: 2, tes: 300, o: 0.155, ok: "bu yayıncı, bu sektör", h: 134239, son: "2026-06"}, {g: "X", y: "X", t: "Tıklama odaklı", ot: "Traffic", tp: "CPC", i: 100.0, n: 1, k: 1, tes: 215, o: 1.4708, ok: "bu yayıncı, bu sektör", h: 158363, son: "2025-11"}, {g: "Programatik", y: "Programatik", t: "Tıklama odaklı", ot: "Banner CPC", tp: "CPC", i: 88.6, n: 1, k: 1, tes: 30, o: 9.1213, ok: "bu yayıncı, bu sektör", h: 33986, son: "2025-11"}, {g: "Meta", y: "Meta", t: "Tıklama odaklı", ot: "Traffic", tp: "CPC", i: 88.2, n: 3, k: 2, tes: 34, o: 2.7203, ok: "bu yayıncı, bu sektör", h: 225155, son: "2026-06"}], "ulasim": [{g: "Bond", y: "Bond", t: "Oyun içi", ot: "Attention Accelerator", tp: "CPV", i: 104.7, n: 1, k: 1, tes: 151, o: 0.2499, ok: "bu yayıncı, bu sektör", h: 270000, son: "2025-11"}, {g: "All in", y: "All-in", t: "Oyun içi", ot: "Oyun içi Rich Media", tp: "CPV", i: 95.3, n: 1, k: 1, tes: 101, o: 0.4964, ok: "bu yayıncı, bu sektör", h: 300000, son: "2025-11"}, {g: "Now", y: "Now Spor", t: "Preroll", ot: "Preroll", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 300, o: 0.0347, ok: "bu yayıncı, bu sektör", h: 250000, son: "2026-04"}, {g: "SportAds", y: "SportAds", t: "Preroll", ot: "Preroll", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 300, o: 0.0956, ok: "bu yayıncı, bu sektör", h: 250000, son: "2026-04"}, {g: "Vole", y: "Vole", t: "Preroll", ot: "Preroll", tp: "CPV", i: 110.4, n: 1, k: 1, tes: 144, o: 0.2433, ok: "bu yayıncı, bu sektör", h: 350000, son: "2026-04"}, {g: "Kontra Spor", y: "Kontra Spor", t: "Preroll", ot: "Preroll", tp: "CPV", i: 104.9, n: 1, k: 1, tes: 101, o: 0.3129, ok: "bu yayıncı, bu sektör", h: 472500, son: "2026-04"}, {g: "TRT", y: "TRT", t: "Preroll", ot: "Preroll", tp: "CPV", i: 103.1, n: 2, k: 1, tes: 104, o: 0.3738, ok: "bu yayıncı, bu sektör", h: 400000, son: "2025-11"}, {g: "Acun Medya", y: "Acunn", t: "Preroll", ot: "Preroll", tp: "CPV", i: 102.2, n: 1, k: 1, tes: 110, o: 0.3644, ok: "bu yayıncı, bu sektör", h: 200000, son: "2025-11"}, {g: "Demirören", y: "Demirören", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 103, o: 0.4209, ok: "bu yayıncı, bu sektör", h: 200000, son: "2025-11"}, {g: "Tooplay", y: "Tooplay", t: "Preroll", ot: "Preroll", tp: "CPV", i: 98.2, n: 1, k: 1, tes: 45, o: 0.48, ok: "bu yayıncı, bu sektör", h: 224399, son: "2026-04"}, {g: "Can", y: "Can", t: "Preroll", ot: "Preroll", tp: "CPV", i: 97.2, n: 1, k: 1, tes: 101, o: 0.5219, ok: "bu yayıncı, bu sektör", h: 220000, son: "2025-11"}, {g: "Now", y: "NOW", t: "Preroll", ot: "Preroll", tp: "CPV", i: 97.1, n: 1, k: 1, tes: 104, o: 0.5267, ok: "bu yayıncı, bu sektör", h: 200000, son: "2025-11"}, {g: "Turkuvaz", y: "Turkuvaz", t: "Preroll", ot: "Preroll & Liveroll", tp: "CPV", i: 96.0, n: 2, k: 2, tes: 107, o: 0.5131, ok: "bu yayıncı, bu sektör", h: 375000, son: "2026-04"}, {g: "beIN", y: "Bein", t: "Preroll", ot: "Preroll", tp: "CPV", i: 93.8, n: 2, k: 2, tes: 40, o: 0.5669, ok: "bu yayıncı, bu sektör", h: 280910, son: "2026-04"}, {g: "Disney", y: "Disney+", t: "Preroll", ot: "Preroll", tp: "CPV", i: 87.3, n: 2, k: 2, tes: 67, o: 0.9664, ok: "bu yayıncı, bu sektör", h: 582287, son: "2026-04"}, {g: "Bond", y: "Bond", t: "Sponsorluk / özel format", ot: "Video Endcard + BLS", tp: "CPV", i: 106.4, n: 1, k: 1, tes: 52, o: 0.29, ok: "bu yayıncı, bu sektör", h: 131037, son: "2026-04"}, {g: "TRT", y: "TRT", t: "Sponsorluk / özel format", ot: "Partner Sales", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 48, o: 0.42, ok: "bu yayıncı, bu sektör", h: 144960, son: "2026-04"}, {g: "Demirören", y: "Demirören", t: "Sponsorluk / özel format", ot: "Alt Bant", tp: "CPV", i: 98.0, n: 1, k: 1, tes: 110, o: 0.4867, ok: "bu yayıncı, bu sektör", h: 80000, son: "2025-11"}], "iklim": [{g: "Google", y: "Google", t: "Arama", ot: "Search", tp: "CPC", i: 106.4, n: 1, k: 1, tes: 120, o: 2.6363, ok: "bu yayıncı, bu sektör", h: 71258, son: "2025-08"}, {g: "Google", y: "Google", t: "Atlanamayan video", ot: "Non-skippable", tp: "CPM", i: 91.9, n: 1, k: 1, tes: 16, o: 220.0953, ok: "bu yayıncı, bu sektör", h: 384037, son: "2025-08"}, {g: "Google", y: "Google", t: "CTV", ot: "Connected Tv", tp: "CPM", i: 93.6, n: 1, k: 1, tes: 22, o: 199.1825, ok: "bu yayıncı, bu sektör", h: 64847, son: "2025-08"}, {g: "Pinterest", y: "Pinterest", t: "Kısa video", ot: "Video View", tp: "CPV", i: 110.6, n: 1, k: 1, tes: 116, o: 0.1007, ok: "bu yayıncı, bu sektör", h: 31108, son: "2025-08"}, {g: "Meta", y: "Meta", t: "Kısa video", ot: "Video Views", tp: "CPV", i: 104.3, n: 1, k: 1, tes: 71, o: 0.1343, ok: "bu yayıncı, bu sektör", h: 30675, son: "2025-08"}, {g: "Bond", y: "Bond", t: "Oyun içi", ot: "In - Game Video", tp: "CPV", i: 105.5, n: 1, k: 1, tes: 22, o: 0.24, ok: "bu yayıncı, bu sektör", h: 21886, son: "2025-08"}, {g: "Tooplay", y: "Tooplay", t: "Preroll", ot: "Preroll", tp: "CPV", i: 102.1, n: 1, k: 1, tes: 57, o: 0.5, ok: "bu yayıncı, bu sektör", h: 79176, son: "2025-08"}, {g: "Go Viral", y: "Go Viral", t: "Preroll", ot: "Preroll", tp: "CPV", i: 97.4, n: 1, k: 1, tes: 96, o: 0.7, ok: "bu yayıncı, bu sektör", h: 96106, son: "2025-08"}, {g: "TikTok", y: "TikTok", t: "Tıklama odaklı", ot: "Traffc", tp: "CPC", i: 117.1, n: 1, k: 1, tes: 300, o: 0.1001, ok: "bu yayıncı, bu sektör", h: 39334, son: "2025-08"}, {g: "Meta", y: "Meta", t: "Tıklama odaklı", ot: "Traffic", tp: "CPC", i: 100.4, n: 1, k: 1, tes: 107, o: 3.4109, ok: "bu yayıncı, bu sektör", h: 121389, son: "2025-08"}, {g: "Oasis", y: "Oasis", t: "Tıklama odaklı", ot: "Big & Bold Banner CPC", tp: "CPC", i: 100.0, n: 1, k: 1, tes: 38, o: 3.5, ok: "bu yayıncı, bu sektör", h: 38269, son: "2025-08"}, {g: "All in", y: "All-in", t: "Tıklama odaklı", ot: "Display CPC", tp: "CPC", i: 98.2, n: 1, k: 1, tes: 82, o: 4.0, ok: "bu yayıncı, bu sektör", h: 40760, son: "2025-08"}, {g: "Refresh", y: "Refresh", t: "Tıklama odaklı", ot: "Native CPC", tp: "CPC", i: 98.2, n: 1, k: 1, tes: 38, o: 4.0, ok: "bu yayıncı, bu sektör", h: 18820, son: "2025-08"}], "icecek": [{g: "Mimeda", y: "Mimeda", t: "Arama", ot: "Search", tp: "CPC", i: 96.6, n: 1, k: 1, tes: 66, o: 5.0, ok: "bu yayıncı, bu sektör", h: 49205, son: "2026-05"}, {g: "Google", y: "Youtube", t: "Atlanamayan video", ot: "Non Skippable", tp: "CPM", i: 100.4, n: 2, k: 2, tes: 74, o: 95.9447, ok: "bu yayıncı, bu sektör", h: 1689686, son: "2026-06"}, {g: "Digitals.com", y: "Digitals.com", t: "CTV", ot: "Connected Tv", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 300, o: 0.0942, ok: "bu yayıncı, bu sektör", h: 100000, son: "2026-05"}, {g: "Google", y: "Youtube", t: "CTV", ot: "Connected Tv", tp: "CPM", i: 101.8, n: 2, k: 2, tes: 89, o: 104.1467, ok: "bu yayıncı, bu sektör", h: 649709, son: "2026-05"}, {g: "Bond", y: "Bond", t: "CTV", ot: "Connected Tv", tp: "CPV", i: 97.6, n: 2, k: 2, tes: 112, o: 0.3148, ok: "bu yayıncı, bu sektör", h: 800000, son: "2026-05"}, {g: "TikTok", y: "TikTok", t: "Kısa video", ot: "Video Views", tp: "CPM", i: 117.1, n: 1, k: 1, tes: 153, o: 19.6108, ok: "bu yayıncı, bu sektör", h: 200000, son: "2026-05"}, {g: "Bond", y: "Bond", t: "Kısa video", ot: "Video Views", tp: "CPV", i: 117.1, n: 1, k: 1, tes: 300, o: 0.0942, ok: "bu yayıncı, bu sektör", h: 100000, son: "2026-05"}, {g: "All in", y: "All-in", t: "Kısa video", ot: "Video Views", tp: "CPV", i: 107.8, n: 1, k: 1, tes: 300, o: 0.1414, ok: "bu yayıncı, bu sektör", h: 150000, son: "2026-05"}, {g: "X", y: "X", t: "Kısa video", ot: "Video Views", tp: "CPV", i: 99.6, n: 1, k: 1, tes: 21, o: 0.2243, ok: "bu yayıncı, bu sektör", h: 46794, son: "2026-05"}, {g: "Google", y: "Youtube", t: "Kısa video", ot: "Truview", tp: "CPV", i: 99.0, n: 3, k: 3, tes: 147, o: 0.2312, ok: "bu yayıncı, bu sektör", h: 1199573, son: "2026-06"}, {g: "Channal Foctory", y: "Channal Foctory", t: "Kısa video", ot: "Trivuew", tp: "CPM", i: 96.4, n: 1, k: 1, tes: 90, o: 80.0, ok: "bu yayıncı, bu sektör", h: 270263, son: "2026-05"}, {g: "Meta", y: "Meta", t: "Kısa video", ot: "Video Views", tp: "CPM", i: 93.0, n: 8, k: 3, tes: 99, o: 55.9144, ok: "bu yayıncı, bu sektör", h: 2814774, son: "2026-06"}, {g: "Spotify", y: "Spotify", t: "Kısa video", ot: "Video", tp: "CPM", i: 88.6, n: 1, k: 1, tes: 84, o: 300.0, ok: "bu yayıncı, bu sektör", h: 126373, son: "2026-05"}, {g: "Google", y: "Youtube", t: "Masthead", ot: "Masthead", tp: "CPM", i: 94.4, n: 1, k: 1, tes: 112, o: 41.9795, ok: "bu yayıncı, bu sektör", h: 625899, son: "2026-05"}, {g: "Videout", y: "Videout", t: "Oyun içi", ot: "Preroll + Rich Media", tp: "CPV", i: 97.1, n: 1, k: 1, tes: 115, o: 0.4158, ok: "bu yayıncı, bu sektör", h: 250000, son: "2026-05"}, {g: "Arcon", y: "Arcon", t: "Preroll", ot: "Preroll", tp: "CPM", i: 117.1, n: 1, k: 1, tes: 300, o: 6.9577, ok: "bu yayıncı, bu sektör", h: 300000, son: "2026-05"}, {g: "Oasis", y: "Oasis", t: "Preroll", ot: "Preroll", tp: "CPV", i: 104.9, n: 1, k: 1, tes: 101, o: 0.4469, ok: "bu yayıncı, bu sektör", h: 200000, son: "2026-05"}, {g: "Tooplay", y: "Tooplay", t: "Preroll", ot: "Preroll", tp: "CPV", i: 103.3, n: 1, k: 1, tes: 101, o: 0.4875, ok: "bu yayıncı, bu sektör", h: 400000, son: "2026-05"}, {g: "TRT", y: "Trt & Tabii", t: "Preroll", ot: "Preroll", tp: "CPV", i: 100.1, n: 1, k: 1, tes: 101, o: 0.5939, ok: "bu yayıncı, bu sektör", h: 250000, son: "2026-05"}, {g: "Segment", y: "Segment", t: "Preroll", ot: "Preroll", tp: "CPV", i: 99.9, n: 1, k: 1, tes: 108, o: 0.6046, ok: "bu yayıncı, bu sektör", h: 200000, son: "2026-05"}, {g: "Turkuvaz", y: "Turkuvaz", t: "Preroll", ot: "Preroll", tp: "CPV", i: 99.1, n: 2, k: 2, tes: 107, o: 0.6244, ok: "bu yayıncı, bu sektör", h: 550000, son: "2026-05"}, {g: "Programatik", y: "Programatik", t: "Preroll", ot: "Preroll", tp: "CPM", i: 98.0, n: 2, k: 2, tes: 109, o: 53.782, ok: "bu yayıncı, bu sektör", h: 1099929, son: "2026-05"}, {g: "HepsiBurada", y: "HepsiBurada", t: "Preroll", ot: "Preroll", tp: "CPV", i: 91.4, n: 1, k: 1, tes: 119, o: 1.5153, ok: "bu yayıncı, bu sektör", h: 300000, son: "2026-05"}, {g: "Disney", y: "Disney+", t: "Preroll", ot: "Preroll", tp: "CPV", i: 90.5, n: 1, k: 1, tes: 100, o: 1.7922, ok: "bu yayıncı, bu sektör", h: 300000, son: "2026-05"}, {g: "Karnaval", y: "Karnaval", t: "Ses", ot: "Audio", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 103, o: 0.3206, ok: "bu yayıncı, bu sektör", h: 200000, son: "2026-05"}, {g: "OnStream", y: "OnStream", t: "Sponsorluk / özel format", ot: "3D Kreatör + Alt Bant", tp: "CPV", i: 104.4, n: 1, k: 1, tes: 156, o: 0.2371, ok: "bu yayıncı, bu sektör", h: 200000, son: "2026-05"}, {g: "X", y: "X", t: "Sponsorluk / özel format", ot: "Reach Block - Final Four", tp: "CPM", i: 100.1, n: 2, k: 2, tes: 122, o: 13.6383, ok: "bu yayıncı, bu sektör", h: 135300, son: "2026-05"}, {g: "Bond", y: "Bond", t: "Sponsorluk / özel format", ot: "İnteractive endcard", tp: "CPV", i: 100.0, n: 1, k: 1, tes: 107, o: 0.3096, ok: "bu yayıncı, bu sektör", h: 350000, son: "2026-05"}, {g: "Tooplay", y: "Tooplay", t: "Sponsorluk / özel format", ot: "Video End Card + Bls", tp: "CPV", i: 94.7, n: 1, k: 1, tes: 100, o: 0.4895, ok: "bu yayıncı, bu sektör", h: 500000, son: "2026-05"}, {g: "Google", y: "Youtube", t: "Sponsorluk / özel format", ot: "Line Up", tp: "CPM", i: 88.6, n: 1, k: 1, tes: 44, o: 194.58, ok: "bu yayıncı, bu sektör", h: 215955, son: "2026-05"}]};
+
+  const TURLER = ['Preroll','Kısa video','Atlanamayan video','Masthead','CTV','Sponsorluk / özel format','Tıklama odaklı','Arama','Ses','Oyun içi'];
+  const paraF = n => n.toLocaleString('tr-TR',{maximumFractionDigits:0});
+  const birimF = (v,tip) => tip==='CPM' ? v.toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})
+                                        : v.toLocaleString('tr-TR',{minimumFractionDigits:3,maximumFractionDigits:3});
+  const adetHesap = (butce,birim,tip) => birim>0 ? Math.round(butce/birim*(tip==='CPM'?1000:1)) : 0;
+
+  /* ---- karne ---- */
+  const halfWidth = n => Math.min(46, 14 + 62/Math.sqrt(Math.max(n,1)));
+  const MIN=30, MAX=170;
+  const pos = v => Math.max(0,Math.min(100,(v-MIN)/(MAX-MIN)*100));
+  function ivBar(i,n){
+    const hw = halfWidth(n), lo = pos(i-hw), hi = pos(i+hw);
+    const cls = i>=115 ? 's-strong' : (i<=85 ? 's-weak' : '');
+    const thin = n<4 ? ' thin' : '';
+    return `<div class="iv ${cls}${thin}" title="Puan büyük ihtimalle ${Math.round(i-hw)} ile ${Math.round(i+hw)} arasında · ${n} satır">
+      <div class="axis"></div><div class="tickzero"></div>
+      <div class="band" style="left:${lo}%;width:${Math.max(hi-lo,1.5)}%"></div>
+      <div class="pt" style="left:${pos(i)}%"></div></div>`;
+  }
+  function srcTag(n){
+    if(n>=8) return '<span class="tag t-ok">Kendi verisi</span>';
+    if(n>=4) return '<span class="tag t-warn">Yarısı tahmin</span>';
+    return '<span class="tag t-neutral">Tahmin</span>';
+  }
+  function turDoldur(){
+    const rows = scoreData[$('#f-sec').value] || [];
+    const mevcut = TURLER.filter(t => rows.some(r=>r.t===t));
+    const sec = $('#f-tur');
+    const onceki = sec.value;
+    sec.innerHTML = '<option value="">Hepsi</option>' + mevcut.map(t=>`<option>${t}</option>`).join('');
+    if(mevcut.includes(onceki)) sec.value = onceki;
+  }
+  function renderScore(){
+    const rows = scoreData[$('#f-sec').value] || [];
+    const tur = $('#f-tur').value, thr = +$('#f-conf').value;
+    $('#f-conf-v').textContent = thr===0 ? 'hepsi' : 'en az '+thr+' satır';
+    const shown = rows.filter(r => (!tur || r.t===tur) && r.n>=thr);
+    $('#sc-body').innerHTML = shown.map(r=>`
+      <tr class="${r.n<4?'dim':''}">
+        <td class="pub">${r.g}</td>
+        <td>${r.y}</td>
+        <td>${r.t}<small style="color:var(--ink-3);font-size:11px">${r.ot}</small></td>
+        <td class="num">${r.tp}</td>
+        <td>${ivBar(r.i,r.n)}</td>
+        <td class="num">${r.i}</td>
+        <td class="num">${r.n}</td><td class="num">${r.k}</td>
+        <td class="num">${r.tes==null?'—':r.tes+'%'}</td>
+        <td class="num" title="${r.ok}">${birimF(r.o,r.tp)} ₺</td>
+        <td class="num">${paraF(r.h)}</td>
+        <td>${srcTag(r.n)}</td>
+      </tr>`).join('');
+    $('#rowcount').textContent = `${rows.length} satırdan ${shown.length} tanesi gösteriliyor`;
+    $('#sc-note').innerHTML = thr===0
+      ? 'Puanlar yayın türüne göre ayrı hesaplanır: bir yayıncının preroll puanı ile tıklama puanı ayrı satırlardır. <b>Önerilen birim maliyet</b>, o yayıncıdan o yayın türünde geçmişte gerçekleşen fiyatların ortasıdır; üzerine gelince neye dayandığını gösterir.'
+      : `En az ${thr} satır filtresi uygulandı. Gizlenenler kötü olduğu için değil, haklarında yeterli bilgimiz olmadığı için düştü.`;
+  }
+  ['#f-sec','#f-tur','#f-conf'].forEach(x=>$(x).addEventListener('input', e=>{
+    if(e.target.id==='f-sec') turDoldur();
+    renderScore();
+  }));
+  turDoldur(); renderScore();
+
+  /* ---- öneri: gerçek karne verisinden üretilir ---- */
+  const TOTAL = 4200000, SEKTOR = 'icecek', TAVAN = 0.30, DENEME = 0.08;
+  function oneriUret(){
+    const hepsi = (scoreData[SEKTOR]||[]).slice();
+    const cekirdek = hepsi.filter(r=>r.n>=2).sort((a,b)=>b.i-a.i).slice(0,6);
+    const deneme = hepsi.filter(r=>r.n<2 && r.i>=104).sort((a,b)=>b.i-a.i).slice(0,2);
+    const dusuk  = hepsi.filter(r=>r.i<92).sort((a,b)=>a.i-b.i).slice(0,1);
+    const list=[];
+    let agirlik = cekirdek.map(r=>r.i*Math.sqrt(r.n));
+    let toplam = agirlik.reduce((a,b)=>a+b,0);
+    const cekirdekButce = TOTAL*(1-DENEME);
+    const grupToplam={};
+    cekirdek.forEach((r,ix)=>{
+      let b = Math.round(cekirdekButce*agirlik[ix]/toplam/1000)*1000;
+      const mevcut = grupToplam[r.g]||0;
+      if(mevcut+b > TOTAL*TAVAN){ b = Math.max(0, Math.round((TOTAL*TAVAN-mevcut)/1000)*1000); }
+      grupToplam[r.g]=(grupToplam[r.g]||0)+b;
+      list.push({...r, rec:b, ex:false});
+    });
+    const denemeButce = TOTAL*DENEME;
+    deneme.forEach(r=> list.push({...r, rec: Math.round(denemeButce/Math.max(deneme.length,1)/1000)*1000, ex:true}));
+    dusuk.forEach(r=> list.push({...r, rec:0, ex:false}));
+    return list;
+  }
+  const alloc = oneriUret();
+  let secim = alloc.map(a=>({butce:a.rec, birim:a.o, sebep:''}));
+
+  function gerekce(a){
+    const guven = a.n>=8 ? `${a.n} satır veri var, bu yayıncıyı iyi tanıyoruz`
+                : a.n>=4 ? `${a.n} satır veri var, puanı orta güvende`
+                : `sadece ${a.n} satır veri var, puanı büyük ölçüde tahmin`;
+    const puan = a.i>=115 ? `Puanı ${a.i}, aynı sektörde ${a.t} yapan yayıncıların açık ara üstünde.`
+               : a.i>=100 ? `Puanı ${a.i}, ortalamanın üstünde.`
+               : a.i>=92  ? `Puanı ${a.i}, ortalama seviyede.`
+               : `Puanı ${a.i}, ortalamanın altında.`;
+    const tes = a.tes==null ? '' : ` Geçmişte söz verdiğinin ortalama %${a.tes}'ini yayınlamış.`;
+    const ex  = a.ex ? ' Deneme payından: az bütçeyle test edip hakkında bilgi topluyoruz.' : '';
+    const oner = ` Önerilen birim maliyet ${birimF(a.o,a.tp)} ₺ (${a.ok}).`;
+    return puan + tes + ` ${guven.charAt(0).toUpperCase()+guven.slice(1)}.` + oner + ex;
+  }
+
+  function renderAlloc(){
+    let html='';
+    alloc.forEach((a,ix)=>{
+      const s0=secim[ix];
+      const bFark = a.rec>0 ? s0.butce/a.rec-1 : (s0.butce>0?1:0);
+      const mFark = s0.birim/a.o-1;
+      const adet = adetHesap(s0.butce, s0.birim, a.tp);
+      const uyari=[];
+      if(Math.abs(mFark)>0.15) uyari.push(`<span class="tag t-warn">Birim maliyet %${Math.round(Math.abs(mFark)*100)} ${mFark>0?'yüksek':'düşük'}</span>`);
+      if(Math.abs(bFark)>0.15) uyari.push('<span class="tag t-warn">Bütçe değişti</span>');
+      const sebepGerek = uyari.length>0;
+      html += `<tr class="${a.n<2?'dim':''}">
+        <td class="pub">${a.g}</td><td>${a.y}</td>
+        <td>${a.t} ${a.ex?'<span class="tag t-explore">deneme</span>':''}</td>
+        <td class="num">${a.tp}</td>
+        <td class="num">${a.i}</td><td class="num">${a.n}</td>
+        <td class="num">${birimF(a.o,a.tp)}</td>
+        <td class="num"><input type="text" class="bi mono" data-ix="${ix}" style="width:78px;text-align:right"
+              value="${birimF(s0.birim,a.tp)}" aria-label="${a.y} birim maliyet"></td>
+        <td class="num">${paraF(a.rec)}</td>
+        <td class="num"><input type="text" class="bu mono" data-ix="${ix}" style="width:96px;text-align:right"
+              value="${paraF(s0.butce)}" aria-label="${a.y} bütçe"></td>
+        <td class="num">${paraF(adet)}</td>
+        <td>${uyari.join(' ')||'<span class="tag t-ok">Öneriye uygun</span>'}</td></tr>
+      <tr><td colspan="12" style="border-bottom:1px solid var(--rule);padding-top:0">
+        <div class="why"><b>Neden:</b> ${gerekce(a)}</div>
+        ${sebepGerek?`<div style="margin-top:6px"><input type="text" class="sb" data-ix="${ix}" style="width:min(560px,100%)"
+           placeholder="Öneriden ayrıldınız — sebebini yazın (plana ve dışa aktarılan dosyaya kaydedilir)" value="${s0.sebep.replace(/"/g,'&quot;')}"></div>`:''}
+      </td></tr>`;
+    });
+    $('#al-body').innerHTML = html;
+    const sum = secim.reduce((t,x)=>t+x.butce,0);
+    const grp={}; alloc.forEach((a,ix)=>{grp[a.g]=(grp[a.g]||0)+secim[ix].butce;});
+    const top = Object.entries(grp).sort((a,b)=>b[1]-a[1])[0]||['—',0];
+    const share = sum? top[1]/sum : 0;
+    const exSum = alloc.reduce((t,a,ix)=> t + (a.ex?secim[ix].butce:0),0);
+    $('#alloc-sum').innerHTML = `Dağıtılan ${paraF(sum)} / ${paraF(TOTAL)} ₺ · en çok bütçe alan grup: ${top[0]} %${(share*100).toFixed(0)}`
+      + (share>TAVAN+0.005?' <span class="tag t-bad">sınır aşıldı</span>':'')
+      + (sum>TOTAL?' <span class="tag t-bad">bütçe aşıldı</span>':'');
+    const eksik = alloc.filter((a,ix)=>{
+      const mF=Math.abs(secim[ix].birim/a.o-1), bF=a.rec>0?Math.abs(secim[ix].butce/a.rec-1):(secim[ix].butce>0?1:0);
+      return (mF>0.15||bF>0.15) && !secim[ix].sebep.trim(); }).length;
+    $('#al-note').innerHTML = `Deneme payı %${(exSum/Math.max(sum,1)*100).toFixed(1)} (olması gereken %8). `
+      + `Birim maliyeti veya bütçeyi öneriden %15'ten fazla değiştirdiğinizde sebep sorulur. `
+      + (eksik? `<b>${eksik} satırda sebep yazılmamış.</b> ` : '<b>Tüm değişikliklerin sebebi yazılmış.</b> ')
+      + 'Değiştirmek serbest, sebebini yazmamak değil.';
+  }
+  $('#al-body').addEventListener('input', e=>{
+    const el=e.target, ix=+el.dataset.ix;
+    if(el.classList.contains('bu')) secim[ix].butce = parseInt(el.value.replace(/[^\d]/g,''),10)||0;
+    else if(el.classList.contains('bi')) secim[ix].birim = parseFloat(el.value.replace(/\./g,'').replace(',','.'))||0;
+    else if(el.classList.contains('sb')){ secim[ix].sebep = el.value; return; }
+    else return;
+    renderAlloc();
+  });
+  $('#al-body').addEventListener('change', e=>{
+    if(e.target.classList.contains('sb')) renderAlloc();
+  });
+  $('#btn-reset').addEventListener('click', ()=>{ secim = alloc.map(a=>({butce:a.rec, birim:a.o, sebep:''})); renderAlloc(); });
+  $('#btn-send').addEventListener('click', ()=>{
+    const b=$('#btn-send'); b.textContent='Onaya gönderildi'; b.disabled=true;
+    setTimeout(()=>{b.textContent='Onaya gönder'; b.disabled=false;},1800);
+  });
+  $('#btn-export').addEventListener('click', ()=>{
+    const q = v => '"'+String(v).replace(/"/g,'""')+'"';
+    const bas = ['Yayıncı grubu','Yayıncı','Yayın türü','Fiyat tipi','Puan','Kaç satır veri',
+                 'Önerilen birim maliyet','Seçilen birim maliyet','Birim maliyet farkı %',
+                 'Sistem bütçesi','Seçilen bütçe','Bütçe farkı %','Tahmini adet',
+                 'Deneme payı mı','Sistemin gerekçesi','Değişiklik sebebi'];
+    const sat = alloc.map((a,ix)=>{
+      const s0=secim[ix];
+      return [a.g,a.y,a.t,a.tp,a.i,a.n,birimF(a.o,a.tp),birimF(s0.birim,a.tp),
+              ((s0.birim/a.o-1)*100).toFixed(1),a.rec,s0.butce,
+              a.rec>0?((s0.butce/a.rec-1)*100).toFixed(1):'—',
+              adetHesap(s0.butce,s0.birim,a.tp), a.ex?'Evet':'Hayır', gerekce(a), s0.sebep||'—'];
+    });
+    const sum = secim.reduce((t,x)=>t+x.butce,0);
+    const ust = [['Kampanya','Uludağ · Meyveli İçecek'],['Sektör','FMCG › İçecek'],
+                 ['Dönem','01–30 Eylül 2026'],['Toplam bütçe',TOTAL],['Dağıtılan bütçe',sum],
+                 ['Dışa aktarma tarihi',new Date().toLocaleString('tr-TR')],
+                 ['Puanların kaynağı','8 kapanış raporu, yayın türüne göre ayrı hesaplandı'],[]];
+    const csv = '\uFEFF' + ust.map(r=>r.map(q).join(';')).join('\n')
+                + '\n' + bas.map(q).join(';') + '\n' + sat.map(r=>r.map(q).join(';')).join('\n');
+    try{
+      const url = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+      const a2 = document.createElement('a');
+      a2.href = url; a2.download = 'onaylanan-plan-gerekceli.csv';
+      document.body.appendChild(a2); a2.click(); a2.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    }catch(err){ /* indirme engellenirse önizleme yeterli */ }
+    const on = $('#export-onizleme');
+    on.hidden = false;
+    on.querySelector('tbody').innerHTML = sat.map(r=>
+      `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td class="num">${r[3]}</td>
+       <td class="num">${r[4]}</td><td class="num">${r[6]}</td><td class="num">${r[7]}</td>
+       <td class="num">${paraF(r[9])}</td><td class="num">${paraF(r[10])}</td>
+       <td class="why" style="min-width:280px">${r[14]}</td><td class="why">${r[15]}</td></tr>`).join('');
+    $('#export-ozet').textContent = `Uludağ · Meyveli İçecek — ${alloc.length} satır, dağıtılan ${paraF(sum)} ₺, `
+      + `dışa aktarma ${new Date().toLocaleString('tr-TR')}`;
+    $('#btn-kopyala').onclick = () => {
+      navigator.clipboard.writeText(csv).then(()=>{ $('#btn-kopyala').textContent='Kopyalandı'; },()=>{});
+    };
+    const b=$('#btn-export'); b.textContent='Dışa aktarıldı'; setTimeout(()=>b.textContent='Planı dışa aktar',1800);
+    on.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  renderAlloc();
+
+  /* ---- ekip sapma ---- */
+  const team = [['Operasyon ekibi A',11],['Operasyon ekibi B',18],['Dijital planlama',9],['Medya satın alma',26]];
+  $('#team').innerHTML = team.map(([n,v])=>`
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px">
+        <span>${n}</span><span class="mono">%${v}</span></div>
+      <div class="bar ${v>20?'over':''}"><i style="width:${v*3.4}%"></i></div>
+    </div>`).join('');
+})();
+</script>
+</body>
+</html>
