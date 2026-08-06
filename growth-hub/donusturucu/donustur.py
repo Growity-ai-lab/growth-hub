@@ -201,7 +201,7 @@ def oku_dosya(yol):
             bas=b_tar, bit=s_tar, tarih_kesin=kesin, satir_tarih=satir_tarih,
             amac=t_bilgi['amac'],
             grup=g_grup, mecra=g_ad, mecra_ham=mecra, sozlukte_yok=(g_yok or t_bilgi['sozlukte_yok']),
-            ana_tur=t_bilgi['ana'],
+            ana_tur=t_bilgi['ana'], reklam_modeli=(t_bilgi['reklam_modeli'] or t_bilgi['ana']),
             site=txt(ws.cell(r, kolonlar['site']).value) if kolonlar['site'] else '',
             hedef=txt(ws.cell(r, kolonlar['hedef']).value) if kolonlar['hedef'] else '',
             cihaz=txt(ws.cell(r, kolonlar['cihaz']).value) if kolonlar['cihaz'] else '',

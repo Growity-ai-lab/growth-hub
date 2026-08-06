@@ -51,6 +51,7 @@ class Sozluk:
             if norm(s.get('kullanımda mı')) == 'hayır': continue
             self.turler[norm(s['raporda geçen ad'])] = {
                 'ana': (s.get('ana yayın türü') or 'Diğer').strip(),
+                'reklam_modeli': (s.get('standart reklam modeli') or '').strip(),
                 'beklenen_tip': (s.get('beklenen fiyat tipi') or 'CPM').strip(),
                 'video': norm(s.get('video mu')) == 'evet',
                 'amac': (s.get('kampanya amacı') or 'Gösterim almak').strip()}
@@ -90,7 +91,7 @@ class Sozluk:
     def yayin_turu(self, ad):
         v = self._ara(self.turler, ad, 'yayin_turu')
         if v: return dict(v, sozlukte_yok=False)
-        return {'ana': 'Diğer', 'beklenen_tip': 'CPM', 'video': False,
+        return {'ana': 'Diğer', 'reklam_modeli': '', 'beklenen_tip': 'CPM', 'video': False,
                 'amac': 'Gösterim almak', 'sozlukte_yok': True}
 
     def sektor(self, marka):
