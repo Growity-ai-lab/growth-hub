@@ -127,8 +127,8 @@ function ciz(p) {
   }
   $('#tablo-sar').innerHTML = h;
   $('#durum').innerHTML = '';
-  document.querySelectorAll('.butce-in').forEach(inp => inp.addEventListener('input', sapmaKontrol));
-  sapmaKontrol();
+  document.querySelectorAll('.butce-in').forEach(inp => inp.addEventListener('input', girdiDegisti));
+  girdiDegisti();
 }
 
 function tablo(rows) {
@@ -147,6 +147,7 @@ function tablo(rows) {
       <td class="sag">${tl(s.sistem_butce)} ₺</td>
       <td class="sag">
         <input class="butce-in" type="number" data-i="${i}" value="${s.sistem_butce}">
+        <div class="etki" data-i="${i}"></div>
         <input class="sebep-in" data-i="${i}" placeholder="sapma sebebi (zorunlu)">
       </td></tr>
       <tr class="detay"><td colspan="7" class="neden">↳ ${s.sistem_gerekcesi}</td></tr>`;
@@ -159,11 +160,45 @@ function sapma(i) {
   const sec = Number(document.querySelector(`.butce-in[data-i="${i}"]`).value || 0);
   return sis ? Math.abs(sec - sis) / sis : (sec ? 1 : 0);
 }
-function sapmaKontrol() {
+
+/* birim maliyet + tip'ten tahmini hacim (CPM bin başına, CPV/CPC birim başına) */
+const HACIM_ETIKET = { CPM: 'gösterim', CPV: 'izlenme', CPC: 'tıklama' };
+function hacim(butce, birim, tip) {
+  if (!birim || birim <= 0) return null;
+  return tip === 'CPM' ? butce / birim * 1000 : butce / birim;
+}
+function kisa(n) {
+  n = Math.round(n);
+  if (n >= 1e6) return (n / 1e6).toLocaleString('tr-TR', { maximumFractionDigits: 1 }) + ' Mn';
+  return n.toLocaleString('tr-TR');
+}
+
+/* her satır: sebep zorunluluğu + sapma/hacim etkisi; üstte bütçe uyumu (canlı) */
+function girdiDegisti() {
+  let toplam = 0;
   document.querySelectorAll('.butce-in').forEach(inp => {
-    const i = +inp.dataset.i;
+    const i = +inp.dataset.i, r = PLAN.satirlar[i];
+    const sec = Number(inp.value || 0); toplam += sec;
     document.querySelector(`.sebep-in[data-i="${i}"]`).classList.toggle('gerek', sapma(i) > META.uyari_esigi);
+    const et = document.querySelector(`.etki[data-i="${i}"]`);
+    if (!et) return;
+    const dTL = sec - r.sistem_butce;
+    const dPct = r.sistem_butce ? dTL / r.sistem_butce * 100 : (sec ? 100 : 0);
+    const v = hacim(sec, r.oner, r.tip);
+    const hacimStr = v != null ? ` · ≈ ${kisa(v)} ${HACIM_ETIKET[r.tip] || 'birim'}` : '';
+    if (dTL === 0) {
+      et.className = 'etki etki-notr'; et.textContent = `sistemle aynı${hacimStr}`;
+    } else {
+      const yon = dTL > 0 ? '+' : '−';
+      et.className = 'etki ' + (Math.abs(dPct) > META.uyari_esigi * 100 ? 'etki-uyari' : 'etki-notr');
+      et.textContent = `${yon}${Math.abs(dPct).toFixed(0)}% · ${yon}${tl(Math.abs(dTL))} ₺${hacimStr}`;
+    }
   });
+  const b = PLAN.brief.toplam_butce, fark = toplam - b, u = $('#uyum');
+  if (u) {
+    if (Math.abs(fark) < 1) { u.className = 'uyum uyum-tam'; u.textContent = `Senin toplamın ${tl(toplam)} ₺ — bütçeyle tam uyumlu.`; }
+    else { u.className = 'uyum uyum-fark'; u.textContent = `Senin toplamın ${tl(toplam)} ₺ / ${tl(b)} ₺ — ${fark > 0 ? tl(fark) + ' ₺ FAZLA' : tl(-fark) + ' ₺ EKSİK'}.`; }
+  }
 }
 
 /* "sapabilir ama sebebini yazmak zorundadır" — eşik üstü sapmada boş sebepli yayıncılar */
