@@ -12,13 +12,17 @@ Supabase projeni GitHub'a bağladıysan her şey repodan yönetilir:
 
 1. **Şema:** `supabase/migrations/20260807090000_kararlar.sql` zaten repoda. Supabase GitHub
    entegrasyonu bunu otomatik uygular (uygulamıyorsa Bölüm 1'deki SQL'i SQL Editor'e bir kez yapıştır).
-2. **Anahtarlar:** GitHub → repo **Settings → Secrets and variables → Actions → Variables** altında
-   iki **repository variable** tanımla: `SUPABASE_URL` ve `SUPABASE_ANON_KEY` (Supabase > Project
-   Settings > API). Bunlar public anon değerdir; `service_role` anahtarını KOYMA.
-3. **Yayınla:** `pages.yml` iş akışı deploy sırasında `supabase-config.js`'i bu değişkenlerden
+2. **Anahtarlar:** GitHub → repo **Settings → Secrets and variables → Actions → Secrets →
+   "Repository secrets" → New repository secret** ile İKİ ayrı secret ekle (adları birebir):
+   - `SUPABASE_URL` → Supabase > Project Settings > API > Project URL (ör. `https://xxxx.supabase.co`)
+   - `SUPABASE_ANON_KEY` → aynı sayfadaki **anon public** anahtar (`service_role` DEĞİL)
+
+   Not: **Environment secret** değil, **Repository secret** olmalı — build işi ortam kullanmıyor.
+   Tek bir `SUPABASE` secret'ı yetmez; iki ayrı ada ihtiyaç var (URL + anon key).
+3. **Yayınla:** `pages.yml` iş akışı deploy sırasında `supabase-config.js`'i bu secret'lardan
    üretir. Actions sekmesinden "Run workflow" ile tetikle (ya da bir sonraki push'ta otomatik).
 
-Değişkenler boşsa arayüz indir-only kalır — güvenli varsayılan. Aşağıdaki bölümler elle kurulum içindir.
+Secret'lar boşsa arayüz indir-only kalır — güvenli varsayılan. Aşağıdaki bölümler elle kurulum içindir.
 
 ## 1. Tablo + güvenlik (Supabase SQL Editor'de çalıştır)
 
@@ -78,17 +82,23 @@ window.SUPABASE = {
 `anonKey` **public "anon" anahtardır** (service_role DEĞİL). RLS ile korunduğu için istemcide
 durması Supabase'in tasarımı gereği güvenlidir. `service_role` anahtarını ASLA buraya/istemciye koyma.
 
-### Anahtarı repoya koymak istemezsen (opsiyonel)
-GitHub Actions'ta iki **repository variable** tanımla: `SUPABASE_URL`, `SUPABASE_ANON_KEY`.
-Sonra `.github/workflows/pages.yml`'e build adımından önce şunu ekle (deploy sırasında dosyayı üretir):
+### Anahtarı repoya koymak istemezsen (önerilen — zaten kurulu)
+`.github/workflows/pages.yml` deploy sırasında `supabase-config.js`'i iki **repository secret**'tan
+üretir (yukarıdaki "GitHub'a bağlıysan" bölümü). İlgili adım hâlihazırda iş akışında:
 
 ```yaml
-      - name: Supabase yapılandırmasını yaz
+      - name: Supabase yapılandırmasını yaz (repo secret'larından; boşsa indir-only)
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           cat > growth-hub/arayuz/pages/supabase-config.js <<EOF
-          window.SUPABASE = { url: '${{ vars.SUPABASE_URL }}', anonKey: '${{ vars.SUPABASE_ANON_KEY }}' };
+          window.SUPABASE = { url: '${SB_URL}', anonKey: '${SB_ANON}' };
           EOF
 ```
+
+Böylece anahtar repoda durmaz; yalnızca deploy edilen (public) sayfaya gömülür — anon anahtar
+için bu güvenlidir.
 
 ## 3. Doğrulama
 - Arayüzde bir öneri getir, bir satırın bütçesini eşik üstü değiştir, sebep **yazma** → "Planı kaydet"
