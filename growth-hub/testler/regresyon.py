@@ -151,6 +151,15 @@ def main():
                 all(s['yayinci'] in ('Google', 'TikTok') for s in pg['satirlar'])
                 and all(not (s['yayinci'] == 'Google' and s['reklam_modeli'] != 'Kısa video') for s in pg['satirlar']))
 
+        # T-G: seçim gezgini + planlanan/gerçekleşen kanıt alanları
+        print("\n8) Seçim gezgini + kanıt alanları")
+        g = oneri.gezgin(dict(sektor_l2='İçecek'), karne_json, sz)
+        kontrol('gezgin İçecek hücreleri, fayda sıralı',
+                g['hucreler'] and all(x['s2'] == 'İçecek' for x in g['hucreler'])
+                and all(g['hucreler'][i]['fayda'] >= g['hucreler'][i + 1]['fayda'] for i in range(len(g['hucreler']) - 1)))
+        kontrol('karne planlanan/gerçekleşen alanları taşıyor',
+                all(k in karne_json[0] for k in ('plan_birim', 'ger_birim', 'birim_sapma', 'vcr', 'teslim')))
+
     print(f"\n{'='*48}\nSONUÇ: {sum(sonuclar)}/{len(sonuclar)} test geçti")
     return 0 if all(sonuclar) else 1
 

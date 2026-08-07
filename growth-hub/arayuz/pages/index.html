@@ -1,119 +1,131 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Growth Hub — Öneri</title>
+<title>Growth Hub — Mecra seçimi</title>
 <style>
 :root{--ink:#1a1a1a;--paper:#faf8f4;--line:#e2ddd3;--accent:#c8543a;--iyi:#3a7d5a;--uyari:#b8862a;--kart:#fff;--mut:#f3efe7}
 *{box-sizing:border-box}
 body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
 header{background:var(--ink);color:var(--paper);padding:16px 28px}
 header b{font-size:18px}header span{opacity:.7;font-size:12px;margin-left:12px}
-.wrap{max-width:1180px;margin:0 auto;padding:24px 28px}
-.kart{background:var(--kart);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:22px}
-.form{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 26px}
+.kart{background:var(--kart);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:20px}
+.form{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
 .alan{display:flex;flex-direction:column;gap:5px}
 .alan label{font-size:12px;font-weight:600;color:#555}
 select,input{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:#fff}
 select,input[type=number]{min-width:150px}
-.preset{display:flex;gap:6px;margin-top:6px}
-.preset button{padding:5px 10px;font-size:12px;background:var(--mut);color:#555;border:1px solid var(--line);border-radius:6px;cursor:pointer}
-button.ana{font-weight:600;padding:10px 20px;border:0;border-radius:7px;background:var(--accent);color:#fff;cursor:pointer}
-button.ana:disabled{opacity:.5;cursor:not-allowed}
-.ipucu{font-size:12.5px;color:#666;margin-top:10px;line-height:1.5}
-.ipucu b{color:#444}
-details.filtre{margin-top:16px;border-top:1px dashed var(--line);padding-top:12px}
-details.filtre summary{cursor:pointer;font-weight:600;font-size:13.5px}
-#filtre-ozet{font-size:12.5px;color:#777;margin:8px 0}
-#filtre-liste{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px 18px;margin-top:6px}
-.yayinci-satir{border:1px solid var(--line);border-radius:7px;padding:8px 10px;background:#fff}
-.yy{display:flex;align-items:center;gap:7px;cursor:pointer}
-.modeller{margin:6px 0 0 22px;display:flex;flex-direction:column;gap:3px}
-.mdl{font-size:12.5px;color:#555;display:flex;align-items:center;gap:6px;cursor:pointer}
-.satirbasi{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-.uyari{background:#fdf6e6;border:1px solid #e6d9b0;color:#7a5a10;padding:9px 13px;border-radius:7px;margin:6px 0;font-size:13.5px}
-.uyari.kotu{background:#fbecea;border-color:#e6b7ae;color:#8a2f22}
+button{font:inherit;cursor:pointer}
+button.ana{font-weight:600;padding:10px 18px;border:0;border-radius:7px;background:var(--accent);color:#fff}
+button.ikincil{font-weight:600;padding:9px 15px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.ipucu{font-size:12.5px;color:#666;margin-top:10px}.ipucu b{color:#444}
+.baslik-satir{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+.baslik-satir h3{margin:0;font-size:15px}
+.arac{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.segment{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.segment button{padding:6px 12px;border:0;background:#fff;color:#555;font-size:13px}
+.segment button.aktif{background:var(--ink);color:#fff}
+.filtreler{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0 4px;font-size:12.5px}
+.filtre-grup{border:1px solid var(--line);border-radius:7px;padding:6px 10px;max-height:120px;overflow:auto}
+.filtre-grup b{display:block;font-size:11px;color:#777;margin-bottom:3px}
+.filtre-grup label{display:flex;gap:6px;align-items:center;color:#555;cursor:pointer}
 table{width:100%;border-collapse:collapse;margin-top:6px;font-size:13.5px}
-th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:#777}
+th,td{text-align:left;padding:8px 9px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#777}
 td.sag,th.sag{text-align:right}
 .mini{font-size:12px;color:#888}
 .emin{font-size:11px;color:#999}
-.cubuk{height:6px;border-radius:4px;background:#eee;position:relative;margin-top:4px;overflow:hidden;max-width:160px}
+.cubuk{height:6px;border-radius:4px;background:#eee;position:relative;margin-top:3px;overflow:hidden;max-width:150px}
 .cubuk>i{position:absolute;top:0;bottom:0;background:var(--iyi);border-radius:4px}
-.guven-tahmin{color:var(--uyari)}
-.butce-in{width:120px;text-align:right}
-.etki{font-size:11.5px;margin-top:3px;text-align:right;line-height:1.35}
-.etki-notr{color:#888}
+.rozet{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:20px;background:#eee;color:#666}
+.rozet.tahmin{background:#fbecdf;color:#8a5a10}.rozet.kendi{background:#e7f2ea;color:#215a3a}
+.iyi{color:var(--iyi)}.kotu{color:var(--accent)}
+.butce-in{width:118px;text-align:right}
+.etki{font-size:11.5px;margin-top:3px;text-align:right;color:#888;line-height:1.35}
 .etki-uyari{color:var(--accent);font-weight:600}
-.sebep-in{width:100%;margin-top:5px;display:none}
-.sebep-in.gerek{display:block;border-color:var(--accent)}
-.uyum{font-size:12.5px;margin:8px 0;padding:7px 11px;border-radius:7px}
-.uyum-tam{background:#eaf5ee;color:#215a3a}
-.uyum-fark{background:#fdf6e6;color:#7a5a10;font-weight:600}
-.alt-baslik{margin:20px 0 2px;font-size:12.5px;font-weight:600;color:#6b3fa0}
-.etkin{color:var(--accent);font-weight:600}
+.sebep-in{width:100%;margin-top:5px;display:none}.sebep-in.gerek{display:block;border-color:var(--accent)}
+.uyum{font-size:12.5px;margin:10px 0;padding:7px 11px;border-radius:7px}
+.uyum-tam{background:#eaf5ee;color:#215a3a}.uyum-fark{background:#fdf6e6;color:#7a5a10;font-weight:600}
+.proj{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.proj .kpi{flex:1;min-width:150px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--mut)}
+.proj .kpi .ad{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#777}
+.proj .kpi .buyuk{font-size:19px;font-weight:700;margin-top:2px}
+.proj .kpi .hedef{font-size:12px;margin-top:3px}
+.proj .kpi.ulasti{border-color:#bfe0cb;background:#eef7f0}
+.proj .kpi.eksik{border-color:#e6d9b0;background:#fdf9ef}
 .durum{padding:9px 13px;border-radius:7px;font-size:13.5px;margin-top:10px}
 .durum.ok{background:#eaf5ee;color:#215a3a}.durum.hata{background:#fbecea;color:#8a2f22}
-.bos{color:#999;padding:22px;text-align:center}
-.snap{font-size:11.5px;color:#999;margin-top:14px}
-/* detay sütunları yalnızca "teknik detay" açıkken görünür */
-.detay{display:none}
-body.detayli .detay{display:table-cell}
-body.detayli tr.detay{display:table-row}
+.bos{color:#999;padding:20px;text-align:center}
+.ekle{padding:4px 10px;border:1px solid var(--line);border-radius:6px;background:var(--mut);font-size:12.5px}
+.ekle.ekli{background:#e7f2ea;color:#215a3a;border-color:#bfe0cb}
+.cikar{padding:3px 8px;border:1px solid var(--line);border-radius:6px;background:#fff;color:#8a2f22;font-size:12px}
+.snap{font-size:11.5px;color:#999;margin-top:12px}
+.ok-vurgu{color:var(--iyi);font-weight:600}
 </style></head><body>
-<header><b>Growth Hub</b><span>Mecra önerisi — gerçek motor (oneri.py)</span></header>
+<header><b>Growth Hub</b><span>Mecra seçimi — karneyi tara, kendi planını kur (gerçek motor)</span></header>
 <div class="wrap">
 
-  <div id="yukleniyor" class="uyari">Motor yükleniyor… (ilk açılış birkaç saniye sürebilir)</div>
+  <div id="yukleniyor" class="uyum uyum-fark">Motor yükleniyor… (ilk açılış birkaç saniye sürebilir)</div>
 
   <div class="kart" id="form-kart" style="display:none">
+    <div style="font-weight:700;margin-bottom:8px">Brief</div>
     <div class="form">
+      <div class="alan"><label>Marka</label><input id="marka" type="text" placeholder="ör. Uludağ" style="min-width:150px"></div>
+      <div class="alan"><label>Ürün</label><input id="urun" type="text" placeholder="ör. Frutti" style="min-width:130px"></div>
       <div class="alan"><label>Sektör</label><select id="sektor"></select></div>
       <div class="alan"><label>Amaç</label><select id="amac"></select></div>
-      <div class="alan">
-        <label>Bütçe (₺)</label>
-        <input id="butce" type="number" min="0" step="10000" value="1000000">
-        <div class="preset">
-          <button data-preset="1000000" type="button">1 M</button>
-          <button data-preset="2000000" type="button">2 M</button>
-          <button data-preset="5000000" type="button">5 M</button>
-        </div>
-      </div>
-      <button id="oner" class="ana">Öneri getir</button>
+      <div class="alan"><label>Hedef bütçe (₺)</label><input id="butce" type="number" min="0" step="10000" value="1000000"></div>
     </div>
-
-    <details class="filtre">
-      <summary>Platform filtresi (opsiyonel) — sadece belirli yayıncıları iste</summary>
-      <div id="filtre-ozet"></div>
-      <div id="filtre-liste"></div>
-    </details>
-
+    <div class="form" style="margin-top:10px">
+      <div class="alan"><label>Hedef gösterim</label><input id="h-gosterim" type="number" min="0" step="100000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <div class="alan"><label>Hedef izlenme</label><input id="h-izlenme" type="number" min="0" step="100000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <div class="alan"><label>Hedef tıklanma</label><input id="h-tiklanma" type="number" min="0" step="1000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <button id="brief-oner" class="ana">Brief'ten plan öner</button>
+    </div>
     <div class="ipucu">
-      <b>Nasıl okunur:</b> Sistem, bütçeyi <b>faydası</b> en yüksek yayıncılara dağıtır.
-      <b>Fayda = geçmiş puan × yayınlanma oranı</b> (verim × teslim). “<b>tahmin</b>” etiketi az veri demektir —
-      temkinli ol. İstersen “Senin bütçen”i değiştir; sistemden %<span id="esik"></span>’ten fazla saparsan sebep sorulur.
-      <span id="meta" class="mini"></span>
+      <b>Nasıl çalışır:</b> Brief'i gir → <b>Brief'ten plan öner</b> sistemin planını + <b>hedef karşılama</b>
+      projeksiyonunu getirir. İstersen aşağıdaki <b>karneden</b> elle satır ekle/çıkar. Erişim (reach) bu
+      sürümde yok — kitle/örtüşme verisi gerektirir, ayrıca modellenecek. <span id="meta" class="mini"></span>
     </div>
   </div>
 
   <div id="uyarilar"></div>
 
-  <div class="kart" id="sonuc-kart" style="display:none">
-    <div class="satirbasi">
-      <div>
-        <div id="baslik" style="font-weight:700"></div>
-        <div id="ozet" class="mini"></div>
+  <div class="kart" id="gezgin-kart" style="display:none">
+    <div class="baslik-satir">
+      <h3>Karne — seç</h3>
+      <div class="arac">
+        <span class="mini">Kanıt:</span>
+        <div class="segment">
+          <button id="mod-puan" class="aktif">Puana göre</button>
+          <button id="mod-sonuc">Gerçekleşen sonuçlar</button>
+        </div>
       </div>
-      <label class="mini" style="cursor:pointer"><input type="checkbox" id="detay"> teknik detayı göster</label>
     </div>
-    <div id="uyum" class="uyum"></div>
-    <div id="tablo-sar"></div>
-    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+    <div class="filtreler">
+      <div class="filtre-grup"><b>Yayıncı</b><div id="f-yayinci"></div></div>
+      <div class="filtre-grup"><b>Reklam modeli</b><div id="f-model"></div></div>
+    </div>
+    <div id="gezgin-sar"></div>
+  </div>
+
+  <div class="kart" id="plan-kart" style="display:none">
+    <div class="baslik-satir">
+      <h3>Senin planın</h3>
+      <div class="arac">
+        <button id="plan-temizle" class="ikincil">Temizle</button>
+      </div>
+    </div>
+    <div id="plan-sar"><div class="bos">Yukarıdan <b>Brief'ten plan öner</b> ya da karneden <b>+ Ekle</b>.</div></div>
+    <div id="projeksiyon" style="display:none"></div>
+    <div id="uyum" class="uyum" style="display:none"></div>
+    <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <button id="kaydet" class="ana">Planı kaydet</button>
-      <button id="indir" class="ana" style="background:#fff;color:var(--ink);border:1px solid var(--line)">JSONL indir (yedek)</button>
+      <button id="indir" class="ikincil">JSONL indir (yedek)</button>
       <span id="defter-durum" class="mini"></span>
     </div>
     <div id="durum"></div>
-    <div class="snap">Rakamlar gerçek motordan (oneri.py) gelir; tarayıcıda yeniden hesaplanmaz.</div>
+    <div class="snap">Puan/önerilen birim ve sonuçlar gerçek motordan (skor.py/oneri.py) gelir; tarayıcıda yeniden hesaplanmaz.</div>
   </div>
 
 </div>
