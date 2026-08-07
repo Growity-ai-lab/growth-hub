@@ -125,6 +125,32 @@ def main():
     kontrol('sebepsiz sapma reddedilir', red)
     os.remove(T)
 
+    # T-F: platform filtresi (katı + kural gevşetme)
+    print("\n7) Platform filtresi")
+    karne_json = json.load(open(KARNE, encoding='utf-8')) if os.path.exists(KARNE) else None
+    if karne_json:
+        b0 = dict(sektor_l2='Hazır Yiyecek', amac='Video izletmek', toplam_butce=1_000_000, istenen_format_cesidi=None)
+        # filtresiz çıktı, filtre eklenince birebir korunur (geri uyum)
+        p_ref = oneri.oneri_uret(dict(b0), karne_json, sz)
+        p_none = oneri.oneri_uret(dict(b0, yayinci_filtre=None), karne_json, sz)
+        kontrol('filtre=None çıktıyı değiştirmiyor',
+                [s['sistem_butce'] for s in p_ref['satirlar']] == [s['sistem_butce'] for s in p_none['satirlar']]
+                and not p_none['filtre_aktif'])
+        # tek platform: yalnız o yayıncı + tüm bütçe (grup tavanı gevşedi)
+        sec = oneri.filtre_secenekleri(b0, karne_json, sz)
+        kontrol('filtre_secenekleri yayıncı+model veriyor', len(sec) > 0 and all(sec.values()))
+        pt = oneri.oneri_uret(dict(b0, yayinci_filtre=['TikTok']), karne_json, sz)
+        kontrol('tek platform: yalnız seçilen yayıncı',
+                pt['satirlar'] and all(s['yayinci'] == 'TikTok' for s in pt['satirlar']) and pt['filtre_aktif'])
+        kontrol('tek platform: Σ ≤ bütçe, deneme yok',
+                pt['toplam_dagitilan'] <= 1_000_001 and not any(s['deneme'] for s in pt['satirlar']))
+        # reklam modeli süzgeci
+        pg = oneri.oneri_uret(dict(b0, yayinci_filtre=['Google', 'TikTok'],
+                                   reklam_modeli_filtre={'Google': ['Kısa video']}), karne_json, sz)
+        kontrol('reklam modeli süzgeci uygulanıyor',
+                all(s['yayinci'] in ('Google', 'TikTok') for s in pg['satirlar'])
+                and all(not (s['yayinci'] == 'Google' and s['reklam_modeli'] != 'Kısa video') for s in pg['satirlar']))
+
     print(f"\n{'='*48}\nSONUÇ: {sum(sonuclar)}/{len(sonuclar)} test geçti")
     return 0 if all(sonuclar) else 1
 

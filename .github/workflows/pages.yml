@@ -12,7 +12,9 @@ on:
     paths:
       - 'growth-hub/puanlama/karne.json'
       - 'growth-hub/sozluk/sozluk.xlsx'
+      - 'growth-hub/sozluk/sozluk.py'
       - 'growth-hub/arayuz/oneri.py'
+      - 'growth-hub/arayuz/kararlar.py'
       - 'growth-hub/arayuz/pages/**'
       - 'growth-hub/arayuz/pages_uret.py'
       - '.github/workflows/pages.yml'
@@ -39,9 +41,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Bağımlılık (sözlük okuma)
-        run: pip install openpyxl
-      - name: Statik veriyi üret (gerçek motor)
+      - name: Motor varlıklarını Pages'e kopyala (Pyodide için)
         run: python3 growth-hub/arayuz/pages_uret.py
       - uses: actions/upload-pages-artifact@v3
         with:
