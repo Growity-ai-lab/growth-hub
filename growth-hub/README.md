@@ -62,7 +62,14 @@ python3 skor.py /tmp/donusum.json .        # -> karne.json + Mecra_Karnesi.xlsx
 # 3) brief için mecra planı öner (fayda/maliyet)
 cd ../arayuz
 python3 oneri.py --sektor "İçecek" --amac "Gösterim almak" --butce 4200000
+
+# 4) canlı arayüzden test et (tarayıcı, sıfır bağımlılık)
+python3 sunucu.py                          # -> http://localhost:8000
 ```
+
+`sunucu.py` mockup'ın aksine gerçek motora bağlıdır: karneyi `karne.json`'dan okur, planı
+`oneri.py` ile üretir, sapma + sebebi karar defterine yazar. Tarayıcıdaki hiçbir sayı yeniden
+hesaplanmaz (K3); menüler karne + sözlükten dolar (K2). Eşik üstü sapmada sebep boşsa kayıt reddedilir.
 
 Karnenin kırılım seviyesi `sozluk.xlsx` → Parametreler → `karne_kirilim` ile seçilir:
 `ana tür` (varsayılan) ya da `reklam modeli` (skippable/bumper/masthead/trueview ayrı puanlanır).
