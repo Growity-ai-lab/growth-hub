@@ -153,9 +153,23 @@ maddeler o testlerin karşılığıdır.
 - **Fayda = Puan × Yayınlanma%** karnede hesaplanır; öneri motoru bununla sıralar.
 - **Öneri motoru gerçek:** `arayuz/oneri.py` karneyi okur, fayda/maliyete göre yayıncı × reklam
   modeli × fiyat tipi planı üretir (tek_grup_tavani/deneme_payi/min_yayinci_butcesi/
-  min_format_cesidi). Sapmalar `veri/kararlar/kararlar.jsonl` defterine yazılır (`arayuz/kararlar.py`).
+  min_format_cesidi). **Platform filtresi:** `yayinci_filtre` / `reklam_modeli_filtre` ile
+  yalnız belirli yayıncılar istenebilir; filtre aktifken grup tavanı ve deneme payı gevşer
+  (tek yayıncıya odak) ve kullanıcıya not düşülür. Filtresiz davranış birebir korunur.
 - **Güven eşiğini geçen hücre: 92'de 1.** Bu bir kusur değil, veri azlığının dürüst yansıması.
-- Arayüz mock-up aşamasında (tek HTML dosyası, gerçek veriyle çalışıyor, veritabanı yok)
+- **Arayüz gerçek ve canlı** (mock-up değil). Kaynak paylaşımlı: `arayuz/pages/index.html` +
+  `app.js`. Motoru besleyen `MOTOR` barındırmaya göre değişir:
+  - **Yerel:** `arayuz/sunucu.py` (Python stdlib, sıfır bağımlılık) — fetch ile gerçek motora bağlar.
+  - **GitHub Pages:** `arayuz/pages/motor-boot.js` gerçek `oneri.py`'ı tarayıcıda **Pyodide**
+    ile koşturur (K3 — mantık yeniden yazılmaz). `arayuz/pages_uret.py` motor dosyalarını
+    `arayuz/pages/motor/`'a kopyalar; `.github/workflows/pages.yml` karne/sözlük değişince
+    yeniden yayınlar. Canlı: https://growity-ai-lab.github.io/growth-hub/
+  - Serbest bütçe girişi + canlı **bütçe-etki geri bildirimi** (sapma ±%/₺ + tahmini hacim +
+    toplam bütçe uyumu). Eski `growth-hub-mockup.html` (sahte `oneriUret` JS) artık geçersiz.
+- **Karar defteri merkezi:** "Planı kaydet" kararları **Supabase Postgres**'e yazar
+  (`arayuz/pages/app.js` → REST, anon key + RLS yalnız-ekleme, sebep-zorunlu DB trigger).
+  Supabase yapılandırılmazsa JSONL indirmeye düşer. Şema: `supabase/migrations/`,
+  kurulum: `dokuman/supabase-kurulum.md`. Yerel `arayuz/kararlar.py` (JSONL) hâlâ mevcut.
 
 ## 7. Sıradaki işler (öncelik sırasıyla)
 
@@ -164,13 +178,15 @@ maddeler o testlerin karşılığıdır.
    isim ekleme (K2). Reklam modeli kırılımının değeri de veri arttıkça ortaya çıkar.
 2. **Reklam filmi kodu.** Eski raporların hiçbirinde yok, yeni kampanyalarda zorunlu tutulmalı.
    Bu olmadan kötü sonucun yayıncıdan mı reklam filminden mi geldiği ayrıştırılamaz.
-3. **Karar defterini büyütme.** `kararlar.jsonl` yalnız-ekleme dosya defteri kuruldu; çok
-   kullanıcılı akışa geçilirse Postgres/Supabase'e taşınmalı. "Öneriden farklar" raporu bu
-   defteri okur.
-4. **Arayüzü uygulamaya çevirme.** Mock-up'taki beş ekran, akış olarak üç adım (Yükle → Karne →
-   Plan) + iki rapor (Genel bakış, Öneriden farklar) biçiminde yeniden düzenlenmeli. Mock-up'taki
-   gömülü listeler/eşikler (`matCols`, `TURLER`, öneri kesme değerleri) sözlükten okunmalı;
-   `oneriUret` JS'i silinip `oneri.py` çıktısı kullanılmalı (şu an mock-up K3'ü çiğniyor).
+3. **"Öneriden farklar" raporu.** Merkezi defter (Supabase `kararlar`) kuruldu ve yazıyor;
+   sıradaki iş onu **geri okuyup** "ekip en çok nerede, hangi gerekçeyle sapıyor" tablosunu
+   çıkarmak. Mimari kısıt: anon anahtar **yalnız-ekleme** (RLS) — güvenli okuma için Supabase
+   Auth ya da `service_role` tutan küçük bir servis (ör. Render) gerekir; anon anahtara okuma
+   yetkisi VERME (public sayfada tüm defter açığa çıkar).
+4. **Karne ekranı + çok-adım akış.** Öneri akışı canlı; eksik olan Karne'yi (mecra karnesi,
+   güven çubukları) ayrı bir ekran olarak göstermek ve akışı Yükle → Karne → Plan + iki rapor
+   (Genel bakış, Öneriden farklar) biçimine oturtmak. Eski `arayuz/growth-hub-mockup.html`
+   (sahte `oneriUret` JS) artık geçersiz — temizlenebilir.
 5. **Time's Hub bağlantısı.** Uzun vade: puanlama "gerçekleşen KPI" yerine "artımsal katkı"
    üzerinden yapılırsa karne çok daha savunulabilir olur.
 

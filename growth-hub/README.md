@@ -24,8 +24,9 @@ Döngü böyle kapanır.
 | `/donusturucu` | `donustur.py` (eski raporları okur), `sablon_doldur.py` (şablona yazar) | Geliştirici |
 | `/veri` | `/ham`, `/donusturulmus`, `/birlesik` | Otomatik üretilir |
 | `/puanlama` | `skor.py` + üretilen karne | Geliştirici |
-| `/arayuz` | Mock-up, sonra uygulama | Geliştirici |
-| `/dokuman` | Ekip kılavuzu, alınan kararlar | CDO |
+| `/arayuz` | `oneri.py` (motor), `sunucu.py` (yerel), `pages/` (canlı Pages arayüzü, Pyodide) | Geliştirici |
+| `/supabase` | `migrations/` — merkezi karar defteri şeması | Geliştirici / CDO |
+| `/dokuman` | Ekip kılavuzu, alınan kararlar, `supabase-kurulum.md` | CDO |
 
 ## Değişmez kurallar
 
@@ -108,6 +109,8 @@ puanı değişiyor. Yani parametre gerçekten bağlı, kozmetik değil.
   şablonda zorunlu tutulmalı, yoksa kötü sonucun yayıncıdan mı reklam filminden mi
   geldiği ayrıştırılamaz.
 - Görünürlük ve satır bazlı tarih eski raporlarda yok; tarihler kampanya döneminden türetiliyor.
-- Karar katmanı (öneri geçmişi, sapma kayıtları) henüz veritabanına yazmıyor; mock-up aşamasında.
+- Karar defteri (sapma + sebep) artık **Supabase Postgres**'e yazıyor (yalnız-ekleme, RLS +
+  sebep-zorunlu trigger). Eksik olan: defteri **geri okuyan** "Öneriden farklar" raporu —
+  güvenli okuma için Supabase Auth / `service_role` servisi gerekir (anon yalnız-yazma).
 - Güven eşiğini geçen hücre sayısı çok düşük. 24 aylık migrasyon tamamlanmadan
   öneriler "tahmin" seviyesinde kalır.
