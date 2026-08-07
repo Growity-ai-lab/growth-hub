@@ -22,9 +22,11 @@ async function basla() {
   $('#amac').innerHTML = META.amaclar.map(s => `<option>${s}</option>`).join('');
   $('#meta').textContent = `Karne: ${META.karne_hucre} hücre · kırılım: ${META.kirilim} · uyarı eşiği %${Math.round(META.uyari_esigi * 100)}`;
   $('#sektor').addEventListener('change', gezginYukle);
+  $('#marka').addEventListener('change', markaBul);
+  ['#h-gosterim', '#h-izlenme', '#h-tiklanma', '#butce'].forEach(s => $(s).addEventListener('input', () => { if (PLAN.length) etkiGuncelle(); }));
   $('#mod-puan').addEventListener('click', () => setMod('puan'));
   $('#mod-sonuc').addEventListener('click', () => setMod('sonuc'));
-  $('#oneri-doldur').addEventListener('click', oneriDoldur);
+  $('#brief-oner').addEventListener('click', briefOner);
   $('#plan-temizle').addEventListener('click', () => { PLAN = []; planCiz(); gezginCiz(); });
   $('#kaydet').addEventListener('click', kaydet);
   $('#indir').addEventListener('click', indir);
@@ -134,8 +136,8 @@ function sapmaOran(p) { const s = p.sistem_butce; return s ? Math.abs(p.butce - 
 
 function planCiz() {
   if (!PLAN.length) {
-    $('#plan-sar').innerHTML = '<div class="bos">Karneden <b>+ Ekle</b> ile satır ekle ya da “Sistem önerisi ile doldur”.</div>';
-    $('#uyum').style.display = 'none'; return;
+    $('#plan-sar').innerHTML = '<div class="bos">Yukarıdan <b>Brief\'ten plan öner</b> ya da karneden <b>+ Ekle</b>.</div>';
+    $('#uyum').style.display = 'none'; $('#projeksiyon').style.display = 'none'; return;
   }
   let h = `<table><thead><tr><th>Yayıncı</th><th>Reklam modeli</th><th>Tip</th>
     <th class="sag">Önerilen birim</th><th class="sag">Bütçen</th><th></th></tr></thead><tbody>`;
@@ -184,10 +186,21 @@ function etkiGuncelle() {
   if (!hedef) { u.className = 'uyum uyum-tam'; u.textContent = `Plan toplamı ${tl(toplam)} ₺`; }
   else if (Math.abs(fark) < 1) { u.className = 'uyum uyum-tam'; u.textContent = `Plan toplamı ${tl(toplam)} ₺ — hedef bütçeyle tam uyumlu.`; }
   else { u.className = 'uyum uyum-fark'; u.textContent = `Plan toplamı ${tl(toplam)} ₺ / ${tl(hedef)} ₺ — ${fark > 0 ? tl(fark) + ' ₺ FAZLA' : tl(-fark) + ' ₺ EKSİK'}.`; }
+  projeksiyonGuncelle();
 }
 
-async function oneriDoldur() {
-  const btn = $('#oneri-doldur'); btn.disabled = true; btn.textContent = 'Hesaplanıyor…';
+async function markaBul() {
+  const ad = $('#marka').value.trim(); if (!ad) return;
+  try {
+    const r = await MOTOR.marka(ad);
+    if (r.bulundu && r.s2 && META.sektorler.includes(r.s2) && $('#sektor').value !== r.s2) {
+      $('#sektor').value = r.s2; await gezginYukle();
+    }
+  } catch (e) { /* sessiz — sektörü elle seçer */ }
+}
+
+async function briefOner() {
+  const btn = $('#brief-oner'); btn.disabled = true; btn.textContent = 'Hesaplanıyor…';
   try {
     const plan = await MOTOR.oneri({
       sektor_l2: $('#sektor').value, amac: $('#amac').value,
@@ -205,7 +218,45 @@ async function oneriDoldur() {
     gezginCiz(); planCiz();
   } catch (e) {
     $('#durum').className = 'durum hata'; $('#durum').textContent = '✕ Öneri üretilemedi: ' + (e.message || e);
-  } finally { btn.disabled = false; btn.textContent = 'Sistem önerisi ile doldur'; }
+  } finally { btn.disabled = false; btn.textContent = 'Brief\'ten plan öner'; }
+}
+
+/* KPI projeksiyonu: her satırın kendi metriğinde tahmini hacim (erişim hariç). */
+function projeksiyon() {
+  let gosterim = 0, izlenme = 0, tiklama = 0;
+  PLAN.forEach(p => {
+    const v = hacim(p.butce, p.c.oner, p.c.tip);
+    if (v == null) return;
+    if (p.c.tip === 'CPM') gosterim += v;
+    else if (p.c.tip === 'CPV') izlenme += v;
+    else if (p.c.tip === 'CPC') tiklama += v;
+  });
+  return { gosterim, izlenme, tiklama };
+}
+
+function projeksiyonGuncelle() {
+  const el = $('#projeksiyon');
+  if (!PLAN.length) { el.style.display = 'none'; return; }
+  const pr = projeksiyon();
+  const hedef = { gosterim: Number($('#h-gosterim').value || 0), izlenme: Number($('#h-izlenme').value || 0), tiklama: Number($('#h-tiklanma').value || 0) };
+  const kart = (ad, deger, hedefv, birim) => {
+    const varHedef = hedefv > 0;
+    const oran = varHedef ? deger / hedefv : null;
+    const durum = varHedef ? (oran >= 0.999 ? 'ulasti' : 'eksik') : '';
+    let alt = '';
+    if (varHedef) {
+      const yuzde = Math.round(oran * 100);
+      alt = oran >= 0.999
+        ? `<span class="ok-vurgu">✓ hedef karşılandı</span> (hedef ${kisa(hedefv)})`
+        : `%${yuzde} · hedef ${kisa(hedefv)} · ~${kisa(hedefv - deger)} eksik`;
+    }
+    return `<div class="kpi ${durum}"><div class="ad">${ad}</div><div class="buyuk">${kisa(deger)}</div><div class="hedef">${alt}</div></div>`;
+  };
+  el.style.display = 'flex'; el.className = 'proj';
+  el.innerHTML =
+    kart('Gösterim', pr.gosterim, hedef.gosterim) +
+    kart('İzlenme', pr.izlenme, hedef.izlenme) +
+    kart('Tıklanma', pr.tiklama, hedef.tiklama);
 }
 
 /* --- kayıt (Supabase / JSONL), sebep zorunluluğu --- */
@@ -230,10 +281,20 @@ function kararKaydiKur() {
       sebep: sebep.trim(), sebep_gerekli: !!p.sistem_butce && sapmaOran(p) > META.uyari_esigi,
     };
   });
+  const pr = projeksiyon();
   return {
     zaman, kullanici: 'arayuz', tur: 'secim',
-    oneri_id: `${$('#sektor').value}-${$('#amac').value}-${$('#butce').value}`,
-    brief: { sektor_l2: $('#sektor').value, amac: $('#amac').value, toplam_butce: Number($('#butce').value || 0) },
+    oneri_id: `${$('#marka').value || $('#sektor').value}-${$('#amac').value}-${$('#butce').value}`,
+    brief: {
+      marka: $('#marka').value.trim() || null, urun: $('#urun').value.trim() || null,
+      sektor_l2: $('#sektor').value, amac: $('#amac').value, toplam_butce: Number($('#butce').value || 0),
+      kpi_hedef: {
+        gosterim: Number($('#h-gosterim').value || 0) || null,
+        izlenme: Number($('#h-izlenme').value || 0) || null,
+        tiklama: Number($('#h-tiklanma').value || 0) || null,
+      },
+      kpi_projeksiyon: { gosterim: Math.round(pr.gosterim), izlenme: Math.round(pr.izlenme), tiklama: Math.round(pr.tiklama) },
+    },
     satirlar,
   };
 }

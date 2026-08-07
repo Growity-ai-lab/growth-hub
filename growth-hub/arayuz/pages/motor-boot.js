@@ -52,6 +52,10 @@ def _meta():
         amaclar=sorted({t['amac'] for t in _SZ.turler.values() if t.get('amac')}),
     ), ensure_ascii=False)
 
+def _marka(ad):
+    s1, s2, s3, yok = _SZ.sektor(ad)
+    return json.dumps(dict(s2=s2, bulundu=(not yok)), ensure_ascii=False)
+
 def _gezgin(sektor):
     return json.dumps(_oneri.gezgin(dict(sektor_l2=sektor), _KARNE, _SZ), ensure_ascii=False)
 
@@ -64,12 +68,14 @@ def _oneri_uret(brief_json):
 `);
 
   const pyMeta = pyodide.globals.get('_meta');
+  const pyMarka = pyodide.globals.get('_marka');
   const pyGezgin = pyodide.globals.get('_gezgin');
   const pyFiltre = pyodide.globals.get('_filtreler');
   const pyOneri = pyodide.globals.get('_oneri_uret');
 
   window.MOTOR = {
     meta: JSON.parse(pyMeta()),
+    marka: async (ad) => JSON.parse(pyMarka(ad)),
     gezgin: async (sektor) => JSON.parse(pyGezgin(sektor)),
     filtreler: async (sektor, amac) => JSON.parse(pyFiltre(sektor, amac)),
     oneri: async (brief) => JSON.parse(pyOneri(JSON.stringify(brief))),

@@ -46,6 +46,13 @@ td.sag,th.sag{text-align:right}
 .sebep-in{width:100%;margin-top:5px;display:none}.sebep-in.gerek{display:block;border-color:var(--accent)}
 .uyum{font-size:12.5px;margin:10px 0;padding:7px 11px;border-radius:7px}
 .uyum-tam{background:#eaf5ee;color:#215a3a}.uyum-fark{background:#fdf6e6;color:#7a5a10;font-weight:600}
+.proj{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.proj .kpi{flex:1;min-width:150px;border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:var(--mut)}
+.proj .kpi .ad{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:#777}
+.proj .kpi .buyuk{font-size:19px;font-weight:700;margin-top:2px}
+.proj .kpi .hedef{font-size:12px;margin-top:3px}
+.proj .kpi.ulasti{border-color:#bfe0cb;background:#eef7f0}
+.proj .kpi.eksik{border-color:#e6d9b0;background:#fdf9ef}
 .durum{padding:9px 13px;border-radius:7px;font-size:13.5px;margin-top:10px}
 .durum.ok{background:#eaf5ee;color:#215a3a}.durum.hata{background:#fbecea;color:#8a2f22}
 .bos{color:#999;padding:20px;text-align:center}
@@ -61,15 +68,24 @@ td.sag,th.sag{text-align:right}
   <div id="yukleniyor" class="uyum uyum-fark">Motor yükleniyor… (ilk açılış birkaç saniye sürebilir)</div>
 
   <div class="kart" id="form-kart" style="display:none">
+    <div style="font-weight:700;margin-bottom:8px">Brief</div>
     <div class="form">
+      <div class="alan"><label>Marka</label><input id="marka" type="text" placeholder="ör. Uludağ" style="min-width:150px"></div>
+      <div class="alan"><label>Ürün</label><input id="urun" type="text" placeholder="ör. Frutti" style="min-width:130px"></div>
       <div class="alan"><label>Sektör</label><select id="sektor"></select></div>
-      <div class="alan"><label>Amaç (sistem önerisi için)</label><select id="amac"></select></div>
+      <div class="alan"><label>Amaç</label><select id="amac"></select></div>
       <div class="alan"><label>Hedef bütçe (₺)</label><input id="butce" type="number" min="0" step="10000" value="1000000"></div>
     </div>
+    <div class="form" style="margin-top:10px">
+      <div class="alan"><label>Hedef gösterim</label><input id="h-gosterim" type="number" min="0" step="100000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <div class="alan"><label>Hedef izlenme</label><input id="h-izlenme" type="number" min="0" step="100000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <div class="alan"><label>Hedef tıklanma</label><input id="h-tiklanma" type="number" min="0" step="1000" placeholder="opsiyonel" style="min-width:130px"></div>
+      <button id="brief-oner" class="ana">Brief'ten plan öner</button>
+    </div>
     <div class="ipucu">
-      <b>Nasıl çalışır:</b> Aşağıda bu sektörün <b>karnesi</b> var — yayıncı ve reklam modeline göre
-      filtrele, <b>Puan</b> ya da <b>gerçekleşen sonuçlara</b> göre bak, beğendiğini <b>+ Ekle</b> ile
-      kendi planına al. İstersen <b>Sistem önerisi</b> ile başlat. <span id="meta" class="mini"></span>
+      <b>Nasıl çalışır:</b> Brief'i gir → <b>Brief'ten plan öner</b> sistemin planını + <b>hedef karşılama</b>
+      projeksiyonunu getirir. İstersen aşağıdaki <b>karneden</b> elle satır ekle/çıkar. Erişim (reach) bu
+      sürümde yok — kitle/örtüşme verisi gerektirir, ayrıca modellenecek. <span id="meta" class="mini"></span>
     </div>
   </div>
 
@@ -97,11 +113,11 @@ td.sag,th.sag{text-align:right}
     <div class="baslik-satir">
       <h3>Senin planın</h3>
       <div class="arac">
-        <button id="oneri-doldur" class="ikincil">Sistem önerisi ile doldur</button>
         <button id="plan-temizle" class="ikincil">Temizle</button>
       </div>
     </div>
-    <div id="plan-sar"><div class="bos">Karneden <b>+ Ekle</b> ile satır ekle ya da “Sistem önerisi ile doldur”.</div></div>
+    <div id="plan-sar"><div class="bos">Yukarıdan <b>Brief'ten plan öner</b> ya da karneden <b>+ Ekle</b>.</div></div>
+    <div id="projeksiyon" style="display:none"></div>
     <div id="uyum" class="uyum" style="display:none"></div>
     <div style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
       <button id="kaydet" class="ana">Planı kaydet</button>
