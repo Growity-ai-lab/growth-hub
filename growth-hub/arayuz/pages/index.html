@@ -101,13 +101,16 @@ body.detayli tr.detay{display:table-row}
     </div>
     <div id="tablo-sar"></div>
     <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-      <button id="indir" class="ana" style="background:#fff;color:var(--ink);border:1px solid var(--line)">Seçilen planı JSONL indir</button>
+      <button id="kaydet" class="ana">Planı kaydet</button>
+      <button id="indir" class="ana" style="background:#fff;color:var(--ink);border:1px solid var(--line)">JSONL indir (yedek)</button>
+      <span id="defter-durum" class="mini"></span>
     </div>
     <div id="durum"></div>
     <div class="snap">Rakamlar gerçek motordan (oneri.py) gelir; tarayıcıda yeniden hesaplanmaz.</div>
   </div>
 
 </div>
+<script src="supabase-config.js"></script>
 <script src="motor-boot.js"></script>
 <script src="app.js"></script>
 </body></html>

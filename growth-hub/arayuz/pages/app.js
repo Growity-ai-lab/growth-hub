@@ -23,7 +23,9 @@ async function basla() {
   $('#amac').addEventListener('change', filtreleriYenile);
   $('#oner').addEventListener('click', oner);
   $('#detay').addEventListener('change', () => document.body.classList.toggle('detayli', $('#detay').checked));
+  const kb = $('#kaydet'); if (kb) kb.addEventListener('click', kaydet);
   $('#indir').addEventListener('click', indir);
+  if (window.SUPABASE && window.SUPABASE.url) { const t = $('#defter-durum'); if (t) t.textContent = 'Kararlar merkezi deftere (Supabase) yazılır.'; }
   document.querySelectorAll('[data-preset]').forEach(b =>
     b.addEventListener('click', () => { $('#butce').value = b.dataset.preset; }));
   await filtreleriYenile();
@@ -114,12 +116,14 @@ function ciz(p) {
     (p.filtre_aktif ? ' · <span class="etkin">platform filtresi açık</span>' : '');
   if (!p.satirlar.length) { $('#tablo-sar').innerHTML = '<div class="bos">Bu seçim için uygun yayıncı bulunamadı.</div>'; return; }
 
-  const cekirdek = p.satirlar.filter(s => !s.deneme);
-  const deneme = p.satirlar.filter(s => s.deneme);
-  let h = tablo(cekirdek, 0);
+  // orijinal PLAN.satirlar indeksini koru (sapma/kayıt bu indekse göre çalışır)
+  const idx = p.satirlar.map((s, i) => ({ s, i }));
+  const cekirdek = idx.filter(x => !x.s.deneme);
+  const deneme = idx.filter(x => x.s.deneme);
+  let h = tablo(cekirdek);
   if (deneme.length) {
     h += `<div class="alt-baslik">Deneme payı — az tanıdığımız, şans verdiğimiz yayıncılar</div>`;
-    h += tablo(deneme, cekirdek.length);
+    h += tablo(deneme);
   }
   $('#tablo-sar').innerHTML = h;
   $('#durum').innerHTML = '';
@@ -127,14 +131,13 @@ function ciz(p) {
   sapmaKontrol();
 }
 
-function tablo(rows, ofs) {
+function tablo(rows) {
   let h = `<table><thead><tr>
     <th>Yayıncı</th><th>Reklam modeli</th>
     <th class="sag">Fayda</th>
     <th class="detay">Puan</th><th class="sag detay">Önerilen birim</th>
     <th class="sag">Sistem bütçesi</th><th class="sag">Senin bütçen</th></tr></thead><tbody>`;
-  rows.forEach((s, k) => {
-    const i = ofs + k;
+  rows.forEach(({ s, i }) => {
     h += `<tr>
       <td><b>${s.yayinci}</b><div class="mini">${s.grup}</div></td>
       <td>${s.reklam_modeli}<div class="mini guven-${(s.guven||'').replace(/\s/g,'')}">${s.guven}</div></td>
@@ -163,14 +166,17 @@ function sapmaKontrol() {
   });
 }
 
-function indir() {
+/* "sapabilir ama sebebini yazmak zorundadır" — eşik üstü sapmada boş sebepli yayıncılar */
+function sebepEksikleri() {
   const eksik = [];
   PLAN.satirlar.forEach((s, i) => {
     const seb = document.querySelector(`.sebep-in[data-i="${i}"]`).value.trim();
     if (sapma(i) > META.uyari_esigi && !seb) eksik.push(s.yayinci);
   });
-  const d = $('#durum');
-  if (eksik.length) { d.className = 'durum hata'; d.textContent = '✕ Sapma sebebi yazılmamış yayıncılar var: ' + eksik.join(', '); return; }
+  return eksik;
+}
+
+function kararKaydiKur() {
   const zaman = new Date().toISOString().slice(0, 19);
   const satirlar = PLAN.satirlar.map((s, i) => {
     const sec = Number(document.querySelector(`.butce-in[data-i="${i}"]`).value || 0);
@@ -182,16 +188,58 @@ function indir() {
       sebep_gerekli: sapma(i) > META.uyari_esigi,
     };
   });
-  const kayit = {
+  return {
     zaman, kullanici: 'arayuz', tur: 'secim',
     oneri_id: `${PLAN.brief.sektor_l2}-${PLAN.brief.amac}-${PLAN.brief.toplam_butce}`,
     brief: PLAN.brief, satirlar,
   };
+}
+
+function jsonlIndir(kayit) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(kayit) + '\n'], { type: 'application/x-ndjson' }));
-  a.download = `karar-${zaman.replace(/[:T]/g, '-')}.jsonl`;
+  a.download = `karar-${kayit.zaman.replace(/[:T]/g, '-')}.jsonl`;
   a.click(); URL.revokeObjectURL(a.href);
-  d.className = 'durum ok'; d.textContent = '✓ JSONL indirildi. veri/kararlar/kararlar.jsonl defterine eklenebilir.';
+}
+
+/* Supabase Postgres'e (merkezi karar defteri) yaz. Yapılandırılmamışsa {yok:true} döner.
+   Anon public key + RLS (yalnız-ekleme) ile güvenli; sebep zorunluluğunu DB trigger'ı da uygular. */
+async function supabaseYaz(kayit) {
+  const cfg = window.SUPABASE || {};
+  if (!cfg.url || !cfg.anonKey) return { yok: true };
+  const r = await fetch(cfg.url.replace(/\/$/, '') + '/rest/v1/kararlar', {
+    method: 'POST',
+    headers: { apikey: cfg.anonKey, Authorization: 'Bearer ' + cfg.anonKey,
+               'Content-Type': 'application/json', Prefer: 'return=minimal' },
+    body: JSON.stringify(kayit),
+  });
+  if (!r.ok) throw new Error('Supabase ' + r.status + ': ' + (await r.text()).slice(0, 200));
+  return { ok: true };
+}
+
+/* Planı kaydet: Supabase varsa oraya yaz, yoksa JSONL indir. Eşik üstü sapmada sebep zorunlu. */
+async function kaydet() {
+  const d = $('#durum');
+  const eksik = sebepEksikleri();
+  if (eksik.length) { d.className = 'durum hata'; d.textContent = '✕ Sapma sebebi yazılmamış yayıncılar var: ' + eksik.join(', '); return; }
+  const kayit = kararKaydiKur();
+  try {
+    const res = await supabaseYaz(kayit);
+    if (res.yok) { jsonlIndir(kayit); d.className = 'durum ok'; d.textContent = '✓ Supabase yapılandırılmadı — plan JSONL olarak indirildi.'; }
+    else { d.className = 'durum ok'; d.textContent = '✓ Karar defterine (Supabase) yazıldı.'; }
+  } catch (e) {
+    jsonlIndir(kayit);
+    d.className = 'durum hata'; d.textContent = '✕ Supabase’e yazılamadı (' + (e.message || e) + '). Yedek olarak JSONL indirildi.';
+  }
+}
+
+/* Her zaman yerel yedek indir (sebep kuralını yine uygular). */
+function indir() {
+  const d = $('#durum');
+  const eksik = sebepEksikleri();
+  if (eksik.length) { d.className = 'durum hata'; d.textContent = '✕ Sapma sebebi yazılmamış yayıncılar var: ' + eksik.join(', '); return; }
+  jsonlIndir(kararKaydiKur());
+  d.className = 'durum ok'; d.textContent = '✓ JSONL indirildi (yerel yedek).';
 }
 
 /* MOTOR hazır olunca (sunucu: hemen, Pyodide: motor yüklenince) arayüzü başlat */
