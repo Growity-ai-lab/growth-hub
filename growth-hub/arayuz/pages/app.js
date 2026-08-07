@@ -29,6 +29,7 @@ async function basla() {
   $('#brief-oner').addEventListener('click', briefOner);
   $('#plan-temizle').addEventListener('click', () => { PLAN = []; planCiz(); gezginCiz(); });
   $('#kaydet').addEventListener('click', kaydet);
+  $('#excel').addEventListener('click', excelIndir);
   $('#indir').addEventListener('click', indir);
   if (window.SUPABASE && window.SUPABASE.url) $('#defter-durum').textContent = 'Kararlar merkezi deftere (Supabase) yazılır.';
   await gezginYukle();
@@ -333,6 +334,24 @@ function indir() {
   const eksik = sebepEksikleri();
   if (eksik.length) { d.className = 'durum hata'; d.textContent = '✕ Sapma sebebi yazılmamış yayıncılar var: ' + eksik.join(', '); return; }
   jsonlIndir(kararKaydiKur()); d.className = 'durum ok'; d.textContent = '✓ JSONL indirildi (yerel yedek).';
+}
+
+/* Planı Excel olarak indir (çalışma dosyası — sebep zorunlu değil, kayıt/JSONL'de zorunlu). */
+async function excelIndir() {
+  const d = $('#durum');
+  if (!PLAN.length) { d.className = 'durum hata'; d.textContent = '✕ Plan boş.'; return; }
+  try {
+    const kayit = kararKaydiKur();
+    const res = await MOTOR.excel(kayit);
+    if (res.hata) throw new Error(res.hata);
+    const bin = atob(res.b64), arr = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+    a.download = `plan-${kayit.zaman.replace(/[:T]/g, '-')}.xlsx`;
+    a.click(); URL.revokeObjectURL(a.href);
+    d.className = 'durum ok'; d.textContent = '✓ Excel indirildi.';
+  } catch (e) { d.className = 'durum hata'; d.textContent = '✕ Excel üretilemedi: ' + (e.message || e); }
 }
 
 (window.MOTOR_READY || Promise.resolve()).then(basla).catch(e => {

@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(KOK, 'arayuz'))
 from sozluk import Sozluk
 import oneri
 import kararlar
+import disa_aktar
 
 SOZLUK = os.path.join(KOK, 'sozluk', 'sozluk.xlsx')
 KARNE = os.path.join(KOK, 'puanlama', 'karne.json')
@@ -36,6 +37,7 @@ window.MOTOR = {
   gezgin: (s) => fetch('/api/gezgin?sektor=' + encodeURIComponent(s)).then(r => r.json()),
   filtreler: (s, a) => fetch('/api/filtreler?sektor=' + encodeURIComponent(s) + '&amac=' + encodeURIComponent(a)).then(r => r.json()),
   oneri: (brief) => fetch('/api/oneri', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(brief)}).then(r => r.json()),
+  excel: (kayit) => fetch('/api/excel', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(kayit)}).then(r => r.json()),
 };
 window.MOTOR_READY = Promise.resolve();
 """
@@ -168,6 +170,11 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(200, oneri.oneri_uret(brief, karne, sz))
             except Exception as e:
                 return self._json(400, dict(hata=f'öneri üretilemedi: {e}'))
+        if p == '/api/excel':
+            try:
+                return self._json(200, dict(b64=disa_aktar.plan_excel_b64(g)))
+            except Exception as e:
+                return self._json(400, dict(hata=f'excel üretilemedi: {e}'))
         if p == '/api/karar':
             try:
                 kayit = secim_kaydi(sz, g)
