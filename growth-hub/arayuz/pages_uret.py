@@ -19,6 +19,7 @@ MOTOR = os.path.join(KOK, 'arayuz', 'pages', 'motor')
 VARLIKLAR = [
     (os.path.join(KOK, 'arayuz', 'oneri.py'), 'oneri.py'),
     (os.path.join(KOK, 'arayuz', 'kararlar.py'), 'kararlar.py'),
+    (os.path.join(KOK, 'arayuz', 'disa_aktar.py'), 'disa_aktar.py'),
     (os.path.join(KOK, 'sozluk', 'sozluk.py'), 'sozluk.py'),
     (os.path.join(KOK, 'sozluk', 'sozluk.xlsx'), 'sozluk.xlsx'),
     (os.path.join(KOK, 'puanlama', 'karne.json'), 'karne.json'),

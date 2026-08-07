@@ -39,6 +39,7 @@ import sys, json
 sys.path.insert(0, '/app')
 import sozluk as _szmod
 import oneri as _oneri
+import disa_aktar as _disa
 _SZ = _szmod.Sozluk('/app/sozluk.xlsx')
 _KARNE = json.load(open('/app/karne.json', encoding='utf-8'))
 
@@ -65,6 +66,9 @@ def _filtreler(sektor, amac):
 
 def _oneri_uret(brief_json):
     return json.dumps(_oneri.oneri_uret(json.loads(brief_json), _KARNE, _SZ), ensure_ascii=False)
+
+def _excel(kayit_json):
+    return _disa.plan_excel_b64(json.loads(kayit_json))
 `);
 
   const pyMeta = pyodide.globals.get('_meta');
@@ -72,6 +76,7 @@ def _oneri_uret(brief_json):
   const pyGezgin = pyodide.globals.get('_gezgin');
   const pyFiltre = pyodide.globals.get('_filtreler');
   const pyOneri = pyodide.globals.get('_oneri_uret');
+  const pyExcel = pyodide.globals.get('_excel');
 
   window.MOTOR = {
     meta: JSON.parse(pyMeta()),
@@ -79,5 +84,6 @@ def _oneri_uret(brief_json):
     gezgin: async (sektor) => JSON.parse(pyGezgin(sektor)),
     filtreler: async (sektor, amac) => JSON.parse(pyFiltre(sektor, amac)),
     oneri: async (brief) => JSON.parse(pyOneri(JSON.stringify(brief))),
+    excel: async (kayit) => ({ b64: pyExcel(JSON.stringify(kayit)) }),
   };
 })();
