@@ -32,6 +32,7 @@ PAGES = os.path.join(KOK, 'arayuz', 'pages')
 MOTOR_BOOT_JS = """
 window.MOTOR = {
   meta: fetch('/api/meta').then(r => r.json()),
+  gezgin: (s) => fetch('/api/gezgin?sektor=' + encodeURIComponent(s)).then(r => r.json()),
   filtreler: (s, a) => fetch('/api/filtreler?sektor=' + encodeURIComponent(s) + '&amac=' + encodeURIComponent(a)).then(r => r.json()),
   oneri: (brief) => fetch('/api/oneri', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(brief)}).then(r => r.json()),
 };
@@ -124,6 +125,11 @@ class Handler(BaseHTTPRequestHandler):
             if karne is None:
                 return self._json(200, dict(hata='karne.json yok — önce puanlama/skor.py çalıştırın.'))
             return self._json(200, meta_uret(sz, karne))
+        if p == '/api/gezgin':
+            if karne is None:
+                return self._json(400, dict(hata='karne.json yok'))
+            sektor = (parse_qs(yol.query).get('sektor') or [''])[0]
+            return self._json(200, oneri.gezgin(dict(sektor_l2=sektor), karne, sz))
         if p == '/api/filtreler':
             q = parse_qs(yol.query)
             sektor = (q.get('sektor') or [''])[0]

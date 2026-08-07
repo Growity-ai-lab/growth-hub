@@ -31,6 +31,9 @@ def satirlari_hazirla(kampanyalar, bugun):
                 ham_tur=x['format'], tip=x['tip'],
                 birim=x['ger_bedel'] / x['ger_hacim'] * carpan,
                 bedel=x['ger_bedel'],
+                plan_birim=(x['plan_bedel'] / x['plan_hacim'] * carpan)
+                           if x.get('plan_bedel') and x.get('plan_hacim') else (x.get('plan_birim') or None),
+                vcr=x.get('vcr'), ahb=x.get('ahb'),
                 teslim=min(x['ger_hacim'] / x['plan_hacim'], 3.0) if x['plan_hacim'] else None,
                 bas=k['bas'], kampanya=k['dosya']))
     return satirlar
@@ -107,10 +110,21 @@ def puanla(satirlar, sz, bugun=None):
         teslim_orani = (teslim_cell / 100) if teslim_cell is not None else 1.0
         fayda = round(round(puan, 1) * teslim_orani, 1)
 
+        # Planlanan vs gerçekleşen kanıtı (seçim gezgininde "puan ↔ sonuçlar" geçişi için).
+        plan_birimler = [r['plan_birim'] for r in rs if r.get('plan_birim')]
+        vcrler = [r['vcr'] for r in rs if r.get('vcr') is not None]
+        ahblar = [r['ahb'] for r in rs if r.get('ahb') is not None]
+        ger_birim_cell = round(statistics.median([r['birim'] for r in rs]), 4)
+        plan_birim_cell = round(statistics.median(plan_birimler), 4) if plan_birimler else None
+        birim_sapma = round((ger_birim_cell / plan_birim_cell - 1) * 100) if plan_birim_cell else None
+
         sonuc.append(dict(
             s2=s2, grup=grup, yayinci=yayinci, tur=tur, reklam_modeli=rm, tip=tip, n=n,
             puan=round(puan, 1), fayda=fayda, aralik=round(14 + 62 / math.sqrt(n), 1),
             teslim=teslim_cell,
+            plan_birim=plan_birim_cell, ger_birim=ger_birim_cell, birim_sapma=birim_sapma,
+            vcr=(round(statistics.mean(vcrler) * 100, 1) if vcrler else None),
+            ahb=(round(statistics.mean(ahblar), 2) if ahblar else None),
             harcama=round(sum(r['bedel'] for r in rs)),
             kampanya=len({r['kampanya'] for r in rs}),
             oner=round(oner, 4), oner_kaynak=oner_kaynak, oner_n=oner_n,

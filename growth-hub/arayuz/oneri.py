@@ -97,6 +97,21 @@ def filtre_secenekleri(brief, karne, sz):
     return {y: sorted(v) for y, v in sorted(m.items())}
 
 
+def gezgin(brief, karne, sz):
+    """Seçim gezgini: bu sektördeki tüm karne hücrelerini (puan + planlanan/gerçekleşen
+    kanıtıyla) fayda'ya göre sıralı döndürür. Ekip bunları tarar, filtreler, kendi planına
+    ekler — bütçe dağıtımı yapılmaz (o Karar; bu yalnızca okur, K3). Amaç'a göre daraltmaz;
+    format seçimini ekip yapar. Sektörde az veri varsa tüm sektörlere çekilir."""
+    havuz_min = int(sz.p('peer_havuzu_min', 3))
+    hucreler = [c for c in karne if c['s2'] == brief.get('sektor_l2')]
+    sektor_geri = False
+    if len(hucreler) < havuz_min:
+        hucreler = list(karne)
+        sektor_geri = True
+    hucreler = sorted(hucreler, key=lambda c: (-c['fayda'], c['yayinci'], c['reklam_modeli']))
+    return dict(sektor_geri=sektor_geri, hucreler=hucreler)
+
+
 def oneri_uret(brief, karne, sz):
     """brief={sektor_l2, amac, toplam_butce, istenen_format_cesidi?,
              yayinci_filtre?, reklam_modeli_filtre?} → plan sözlüğü."""
