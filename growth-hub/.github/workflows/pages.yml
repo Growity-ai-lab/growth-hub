@@ -1,0 +1,53 @@
+name: Pages — öneri arayüzü
+
+# Gerçek motoru (arayuz/oneri.py) çalıştırıp statik veriyi üretir ve GitHub Pages'e yayınlar.
+# Karne ya da sözlük değişince arayüz otomatik güncellenir; terminal gerekmez.
+
+on:
+  push:
+    branches:
+      - main
+      - claude/section-5-regression-tests-srryld
+    paths:
+      - 'puanlama/karne.json'
+      - 'sozluk/sozluk.xlsx'
+      - 'arayuz/oneri.py'
+      - 'arayuz/pages/**'
+      - 'arayuz/pages_uret.py'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Bağımlılık (sözlük okuma)
+        run: pip install openpyxl
+      - name: Statik veriyi üret (gerçek motor)
+        run: python3 arayuz/pages_uret.py
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: arayuz/pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
