@@ -41,10 +41,13 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Supabase yapılandırmasını yaz (repo değişkenlerinden; boşsa indir-only)
+      - name: Supabase yapılandırmasını yaz (repo secret'larından; boşsa indir-only)
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_ANON: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           cat > growth-hub/arayuz/pages/supabase-config.js <<EOF
-          window.SUPABASE = { url: '${{ vars.SUPABASE_URL }}', anonKey: '${{ vars.SUPABASE_ANON_KEY }}' };
+          window.SUPABASE = { url: '${SB_URL}', anonKey: '${SB_ANON}' };
           EOF
       - name: Motor varlıklarını Pages'e kopyala (Pyodide için)
         run: python3 growth-hub/arayuz/pages_uret.py
