@@ -58,7 +58,15 @@ python3 sablon_doldur.py                   # -> ../veri/donusturulmus/*.xlsx
 # 2) karneyi hesapla
 cd ../puanlama
 python3 skor.py /tmp/donusum.json .        # -> karne.json + Mecra_Karnesi.xlsx
+
+# 3) brief için mecra planı öner (fayda/maliyet)
+cd ../arayuz
+python3 oneri.py --sektor "İçecek" --amac "Gösterim almak" --butce 4200000
 ```
+
+Karnenin kırılım seviyesi `sozluk.xlsx` → Parametreler → `karne_kirilim` ile seçilir:
+`ana tür` (varsayılan) ya da `reklam modeli` (skippable/bumper/masthead/trueview ayrı puanlanır).
+Regresyon: `python3 testler/regresyon.py`.
 
 `donustur.py` her çalışmasında sözlükte bulamadığı adları listeler. O listedeki her ad
 `sozluk.xlsx`'e eklenene kadar ilgili satırlar gruplanamaz — rapor bozulmaz, sadece o satır

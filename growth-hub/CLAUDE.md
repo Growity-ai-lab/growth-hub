@@ -100,11 +100,14 @@ dosya, marka, kampanya, s1, s2, s3, bas, bit, tarih_kesin, yil, butce, uyari[], 
 Her satır:
 
 ```
-grup, mecra, mecra_ham, ana_tur, format, site, hedef, cihaz, amac,
+grup, mecra, mecra_ham, ana_tur, reklam_modeli, format, site, hedef, cihaz, amac,
 tip, tip_kaynak, plan_birim, plan_hacim, plan_bedel,
 ger_hacim, ger_birim, ger_bedel, tik, vcr, ahb, adserver,
 kaynak, durum, sozlukte_yok, bas, bit, satir_tarih, kaynak_dosya
 ```
+
+`reklam_modeli`: K sütunundaki `format`'tan `sozluk` "Standart reklam modeli" eşlemesiyle türetilir;
+eşleme boşsa `ana_tur`'e düşer. **Şablona yazılmaz** (K4) — puanlama bunu `donusum.json`'dan okur.
 
 `durum` ∈ {Planlandı, Yayınlandı, İptal, Veri Gelmedi}. **Yalnızca `Yayınlandı` satırlar
 puanlamaya girer** — yayınlanmamış planı sıfır performans saymak yayıncıya haksızlıktır.
@@ -115,23 +118,42 @@ puanlamaya girer** — yayınlanmamış planı sıfır performans saymak yayınc
 
 ## 5. Regresyon testleri — her değişiklikten sonra
 
+Çalıştırılabilir suite: **`python3 testler/regresyon.py`** (hepsi GEÇTİ olmalı). Aşağıdaki
+maddeler o testlerin karşılığıdır.
+
 1. **Toplam korunuyor mu:** her dönüştürülmüş şablonun `Kampanya!C26` değeri kaynak raporun
    gerçekleşen toplamına eşit olmalı. Sekiz dosyada da fark 0,00 ₺ olmalı.
    Referans: 25.676.102 ₺ toplam, 132 satır, 8 kampanya.
 2. **Şablon formülleri hatasız:** `python3 /mnt/skills/public/xlsx/scripts/recalc.py <dosya>` →
-   `total_errors: 0`.
+   `total_errors: 0`. (LibreOffice yoksa `formulas` python kütüphanesiyle de doğrulanabilir.)
 3. **Dönüştürücü çıktısı sabit:** kod değişikliği öncesi/sonrası `donusum.json` diff'i al.
-   Beklenmeyen fark varsa dur ve raporla.
+   Beklenmeyen fark varsa dur ve raporla. (Reklam modeli eklendiğinde beklenen tek fark
+   satır başına `reklam_modeli` anahtarıdır — geri kalan birebir aynı.)
 4. **Parametreler bağlı mı:** `zaman_yari_omru_ay` 18 → 3 yapıldığında karne hücrelerinin
-   bir kısmının puanı değişmeli (referans: 92 hücrenin 10'u). Değişmiyorsa parametre kopmuş.
+   bir kısmının puanı değişmeli (referans: 92 hücrenin 9'u). Değişmiyorsa parametre kopmuş.
 5. **Sözlük eksikleri:** `donustur.py` sonunda "SÖZLÜKTE YOK" satırı çıkmamalı.
+6. **Kırılım kapalı = bugün:** `karne_kirilim='ana tür'` iken çıktı bugünküyle birebir aynı
+   (92 hücre, reklam_modeli==ana tür'e çöker, güven eşiğini geçen 1/92).
+7. **Kırılım açık = dürüst incelme:** `karne_kirilim='reklam modeli'` iken hücre sayısı artar
+   (97), her çocuk hücre `n ≤ ebeveyn`, `aralık ≥ ebeveyn`, az veri "kendi verisi" demez.
+8. **Öneri tavanları:** öneri motoru Σ ≤ bütçe, grup payı ≤ `tek_grup_tavani`, min yayıncı
+   bütçesi ve format çeşidi kurallarına uyar. **Karar defteri** yalnız-ekleme; eşik üstü
+   sapması olup sebebi boş bir `secim` reddedilir.
 
 ---
 
 ## 6. Mevcut durum
 
 - 8 kapanış raporu dönüştürülmüş (Uludağ ×3, Bitaksi ×2, Dardanel, TLC Klima, Züber)
-- 132 satır, 4 sektör, 46 yayıncı, 92 karne hücresi
+- 132 satır, 4 sektör, 46 yayıncı, 92 karne hücresi (ana tür kırılımı)
+- **Reklam modeli kırılımı** eklendi: `sozluk` "Standart reklam modeli" + `karne_kirilim`
+  parametresi. `reklam modeli` seçiliyken karne 97 hücreye çıkar; puan geri çekilmeli havuzla
+  (reklam modeli → ana tür → yayıncı → grup) hesaplanır, güven çubuğu dürüst kalır. Varsayılan
+  `ana tür` (bugünkü davranış). Aç/kapat Excel'de bir politika kararı (K2).
+- **Fayda = Puan × Yayınlanma%** karnede hesaplanır; öneri motoru bununla sıralar.
+- **Öneri motoru gerçek:** `arayuz/oneri.py` karneyi okur, fayda/maliyete göre yayıncı × reklam
+  modeli × fiyat tipi planı üretir (tek_grup_tavani/deneme_payi/min_yayinci_butcesi/
+  min_format_cesidi). Sapmalar `veri/kararlar/kararlar.jsonl` defterine yazılır (`arayuz/kararlar.py`).
 - **Güven eşiğini geçen hücre: 92'de 1.** Bu bir kusur değil, veri azlığının dürüst yansıması.
 - Arayüz mock-up aşamasında (tek HTML dosyası, gerçek veriyle çalışıyor, veritabanı yok)
 
@@ -139,13 +161,16 @@ puanlamaya girer** — yayınlanmamış planı sıfır performans saymak yayınc
 
 1. **24 aylık migrasyon.** En büyük iş ve sistemin işe yaraması bunun bitmesine bağlı.
    Yeni şablon varyantı çıkarsa `donustur.py`'daki başlık eşleştirmesini genişlet, gömülü
-   isim ekleme (K2).
+   isim ekleme (K2). Reklam modeli kırılımının değeri de veri arttıkça ortaya çıkar.
 2. **Reklam filmi kodu.** Eski raporların hiçbirinde yok, yeni kampanyalarda zorunlu tutulmalı.
    Bu olmadan kötü sonucun yayıncıdan mı reklam filminden mi geldiği ayrıştırılamaz.
-3. **Karar katmanını kalıcı hale getirme.** Öneri geçmişi, seçim, sapma ve sebep şu an hiçbir
-   yere yazılmıyor. Postgres/Supabase şeması gerekli — sapma raporu ancak bundan sonra gerçek olur.
+3. **Karar defterini büyütme.** `kararlar.jsonl` yalnız-ekleme dosya defteri kuruldu; çok
+   kullanıcılı akışa geçilirse Postgres/Supabase'e taşınmalı. "Öneriden farklar" raporu bu
+   defteri okur.
 4. **Arayüzü uygulamaya çevirme.** Mock-up'taki beş ekran, akış olarak üç adım (Yükle → Karne →
-   Plan) + iki rapor (Genel bakış, Öneriden farklar) biçiminde yeniden düzenlenmeli.
+   Plan) + iki rapor (Genel bakış, Öneriden farklar) biçiminde yeniden düzenlenmeli. Mock-up'taki
+   gömülü listeler/eşikler (`matCols`, `TURLER`, öneri kesme değerleri) sözlükten okunmalı;
+   `oneriUret` JS'i silinip `oneri.py` çıktısı kullanılmalı (şu an mock-up K3'ü çiğniyor).
 5. **Time's Hub bağlantısı.** Uzun vade: puanlama "gerçekleşen KPI" yerine "artımsal katkı"
    üzerinden yapılırsa karne çok daha savunulabilir olur.
 
