@@ -6,6 +6,20 @@ Arayüzdeki "Planı kaydet", öneriden sapmaları ve sebeplerini **merkezi** bir
 
 Yapılandırılmazsa arayüz otomatik olarak JSONL indirmeye düşer; yani Supabase **opsiyoneldir**.
 
+## GitHub'a bağlıysan (önerilen — 3 adım)
+
+Supabase projeni GitHub'a bağladıysan her şey repodan yönetilir:
+
+1. **Şema:** `supabase/migrations/20260807090000_kararlar.sql` zaten repoda. Supabase GitHub
+   entegrasyonu bunu otomatik uygular (uygulamıyorsa Bölüm 1'deki SQL'i SQL Editor'e bir kez yapıştır).
+2. **Anahtarlar:** GitHub → repo **Settings → Secrets and variables → Actions → Variables** altında
+   iki **repository variable** tanımla: `SUPABASE_URL` ve `SUPABASE_ANON_KEY` (Supabase > Project
+   Settings > API). Bunlar public anon değerdir; `service_role` anahtarını KOYMA.
+3. **Yayınla:** `pages.yml` iş akışı deploy sırasında `supabase-config.js`'i bu değişkenlerden
+   üretir. Actions sekmesinden "Run workflow" ile tetikle (ya da bir sonraki push'ta otomatik).
+
+Değişkenler boşsa arayüz indir-only kalır — güvenli varsayılan. Aşağıdaki bölümler elle kurulum içindir.
+
 ## 1. Tablo + güvenlik (Supabase SQL Editor'de çalıştır)
 
 ```sql
