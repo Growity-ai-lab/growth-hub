@@ -1,19 +1,20 @@
 name: Pages — öneri arayüzü
 
-# Gerçek motoru (arayuz/oneri.py) çalıştırıp statik veriyi üretir ve GitHub Pages'e yayınlar.
+# Gerçek motoru (growth-hub/arayuz/oneri.py) çalıştırıp statik veriyi üretir ve
+# GitHub Pages'e yayınlar. Proje repo kökünün altındaki growth-hub/ klasöründe;
+# bu iş akışı ise Actions tarafından okunabilmesi için repo KÖKÜNDE durur.
 # Karne ya da sözlük değişince arayüz otomatik güncellenir; terminal gerekmez.
 
 on:
   push:
     branches:
       - main
-      - claude/section-5-regression-tests-srryld
     paths:
-      - 'puanlama/karne.json'
-      - 'sozluk/sozluk.xlsx'
-      - 'arayuz/oneri.py'
-      - 'arayuz/pages/**'
-      - 'arayuz/pages_uret.py'
+      - 'growth-hub/puanlama/karne.json'
+      - 'growth-hub/sozluk/sozluk.xlsx'
+      - 'growth-hub/arayuz/oneri.py'
+      - 'growth-hub/arayuz/pages/**'
+      - 'growth-hub/arayuz/pages_uret.py'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -31,16 +32,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Pages'i Actions kaynağına ayarla (mümkünse otomatik)
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
       - name: Bağımlılık (sözlük okuma)
         run: pip install openpyxl
       - name: Statik veriyi üret (gerçek motor)
-        run: python3 arayuz/pages_uret.py
+        run: python3 growth-hub/arayuz/pages_uret.py
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: arayuz/pages
+          path: growth-hub/arayuz/pages
 
   deploy:
     needs: build
