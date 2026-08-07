@@ -114,6 +114,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._dosya('index.html', 'text/html; charset=utf-8')
         if p == '/app.js':
             return self._dosya('app.js', 'application/javascript; charset=utf-8')
+        if p == '/supabase-config.js':
+            return self._dosya('supabase-config.js', 'application/javascript; charset=utf-8')
         if p == '/motor-boot.js':
             return self._gonder(200, MOTOR_BOOT_JS, 'application/javascript; charset=utf-8')
         sz = Sozluk(SOZLUK)
