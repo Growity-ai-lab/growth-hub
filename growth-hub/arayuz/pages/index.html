@@ -1,0 +1,186 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Growth Hub — Öneri</title>
+<style>
+:root{--ink:#1a1a1a;--paper:#faf8f4;--line:#e2ddd3;--accent:#c8543a;--iyi:#3a7d5a;--uyari:#b8862a;--kart:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+header{background:var(--ink);color:var(--paper);padding:16px 28px}
+header b{font-size:18px}header span{opacity:.7;font-size:12px;margin-left:12px}
+.wrap{max-width:1140px;margin:0 auto;padding:24px 28px}
+.kart{background:var(--kart);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:22px}
+.form{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+.alan{display:flex;flex-direction:column;gap:5px}
+.alan label{font-size:12px;font-weight:600;color:#555}
+select,input{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:7px;background:#fff;min-width:150px}
+button{font:inherit;font-weight:600;padding:10px 20px;border:0;border-radius:7px;background:var(--accent);color:#fff;cursor:pointer}
+button.ikincil{background:#fff;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.uyari{background:#fdf6e6;border:1px solid #e6d9b0;color:#7a5a10;padding:9px 13px;border-radius:7px;margin:6px 0;font-size:13.5px}
+.uyari.kotu{background:#fbecea;border-color:#e6b7ae;color:#8a2f22}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:#777}
+td.sag,th.sag{text-align:right}
+.rozet{display:inline-block;font-size:11px;padding:2px 7px;border-radius:20px;background:#eee;color:#555}
+.rozet.deneme{background:#efe6fb;color:#6b3fa0}
+.cubuk{height:6px;border-radius:4px;background:#eee;position:relative;margin-top:4px;overflow:hidden}
+.cubuk>i{position:absolute;top:0;bottom:0;background:var(--iyi);border-radius:4px}
+.emin{font-size:11px;color:#888}
+.neden{color:#555;font-size:12.5px}
+.butce-in{width:120px;text-align:right}
+.sebep-in{width:100%;margin-top:5px;display:none}
+.sebep-in.gerek{display:block;border-color:var(--accent)}
+.mini{font-size:12px;color:#888}
+.durum{padding:9px 13px;border-radius:7px;font-size:13.5px;margin-top:10px}
+.durum.ok{background:#eaf5ee;color:#215a3a}
+.durum.hata{background:#fbecea;color:#8a2f22}
+.bos{color:#999;padding:22px;text-align:center}
+.snap{font-size:11.5px;color:#999;margin-top:14px}
+</style></head><body>
+<header><b>Growth Hub</b><span>Mecra önerisi — statik anlık görüntü (gerçek motordan üretildi)</span></header>
+<div class="wrap">
+
+  <div id="veri-yok" class="kart" style="display:none">
+    <b class="kotu">veri.js bulunamadı.</b>
+    <div class="mini" style="margin-top:6px">Önce <code>python3 arayuz/pages_uret.py</code> çalıştırılmalı; Pages'te bunu GitHub Action otomatik yapar.</div>
+  </div>
+
+  <div class="kart" id="form-kart" style="display:none">
+    <div class="form">
+      <div class="alan"><label>Sektör</label><select id="sektor"></select></div>
+      <div class="alan"><label>Amaç</label><select id="amac"></select></div>
+      <div class="alan"><label>Bütçe (₺)</label><select id="butce"></select></div>
+      <button id="oner">Öneri getir</button>
+    </div>
+    <div id="meta" class="mini" style="margin-top:12px"></div>
+  </div>
+
+  <div id="uyarilar"></div>
+
+  <div class="kart" id="sonuc-kart" style="display:none">
+    <div id="baslik" style="font-weight:700;margin-bottom:4px"></div>
+    <div id="ozet" class="mini"></div>
+    <div id="tablo-sar"></div>
+    <div style="margin-top:16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button id="indir" class="ikincil">Seçilen planı JSONL indir</button>
+      <span class="mini">Sistem bütçesinden %<span id="esik"></span>'ten fazla sapan satırda sebep zorunlu.</span>
+    </div>
+    <div id="durum"></div>
+    <div class="snap" id="snap"></div>
+  </div>
+
+</div>
+<script src="veri.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+let META=null, PLAN=null;
+const tl=n=>Number(n||0).toLocaleString('tr-TR');
+const anahtar=(s,a,b)=>`${s}||${a}||${b}`;
+
+function basla(){
+  if(typeof window.GH_VERI==='undefined'){$('#veri-yok').style.display='block';return;}
+  META=window.GH_VERI.meta;
+  $('#form-kart').style.display='block';
+  $('#sektor').innerHTML=META.sektorler.map(s=>`<option>${s}</option>`).join('');
+  $('#amac').innerHTML=META.amaclar.map(s=>`<option>${s}</option>`).join('');
+  $('#butce').innerHTML=META.butce_kademeleri.map(b=>`<option value="${b}">${tl(b)} ₺</option>`).join('');
+  $('#esik').textContent=Math.round(META.uyari_esigi*100);
+  $('#meta').textContent=`Karne: ${META.karne_hucre} hücre · kırılım: ${META.kirilim} · uyarı eşiği %${Math.round(META.uyari_esigi*100)} · anlık görüntü: ${META.uretim_zamani}`;
+}
+
+function cubuk(puan,aralik){
+  const alt=Math.max(0,puan-aralik), ust=Math.min(200,puan+aralik), gen=(ust-alt)/2;
+  return `<div>${puan} <span class="emin">± ${aralik}</span></div>
+    <div class="cubuk" title="ne kadar emin olduğumuz"><i style="left:${alt/2}%;width:${gen}%"></i></div>`;
+}
+
+function ciz(p){
+  PLAN=p;
+  $('#uyarilar').innerHTML=(p.uyarilar||[]).map(u=>`<div class="uyari">⚠ ${u}</div>`).join('');
+  $('#sonuc-kart').style.display='block';
+  const b=p.brief;
+  $('#baslik').textContent=`${b.sektor_l2} · ${b.amac} · ${tl(b.toplam_butce)} ₺`;
+  $('#ozet').textContent=`Dağıtılan ${tl(p.toplam_dagitilan)} ₺ / ${tl(b.toplam_butce)} ₺ · reklam modeli çeşidi ${p.reklam_modeli_cesidi}`;
+  $('#snap').textContent='Bu rakamlar gerçek motordan (oneri.py) üretilmiş statik anlık görüntüdür; tarayıcıda yeniden hesaplanmaz.';
+  if(!p.satirlar.length){$('#tablo-sar').innerHTML='<div class="bos">Bu brief için uygun hücre bulunamadı.</div>';return;}
+  let h=`<table><thead><tr>
+    <th>Yayıncı</th><th>Reklam modeli</th><th>Tip</th><th>Puan / ne kadar emin</th>
+    <th class="sag">Fayda</th><th class="sag">Önerilen birim</th>
+    <th class="sag">Sistem bütçesi</th><th class="sag">Senin bütçen</th></tr></thead><tbody>`;
+  p.satirlar.forEach((s,i)=>{
+    h+=`<tr>
+      <td><b>${s.yayinci}</b><div class="mini">${s.grup}</div></td>
+      <td>${s.reklam_modeli} ${s.deneme?'<span class="rozet deneme">deneme</span>':''}</td>
+      <td>${s.tip}</td>
+      <td>${cubuk(s.puan,s.aralik)}<div class="mini">${s.guven}</div></td>
+      <td class="sag">${s.fayda}</td>
+      <td class="sag">${tl(s.oner)}<div class="mini">${s.oner_kaynak}, ${s.oner_n}</div></td>
+      <td class="sag">${tl(s.sistem_butce)} ₺</td>
+      <td class="sag">
+        <input class="butce-in" type="number" data-i="${i}" value="${s.sistem_butce}">
+        <input class="sebep-in" data-i="${i}" placeholder="sapma sebebi (zorunlu)">
+      </td></tr>
+      <tr><td colspan="8" class="neden">↳ ${s.sistem_gerekcesi}</td></tr>`;
+  });
+  h+='</tbody></table>';
+  $('#tablo-sar').innerHTML=h;
+  $('#durum').innerHTML='';
+  document.querySelectorAll('.butce-in').forEach(inp=>inp.addEventListener('input',sapmaKontrol));
+  sapmaKontrol();
+}
+
+function sapma(i){
+  const sis=PLAN.satirlar[i].sistem_butce;
+  const sec=Number(document.querySelector(`.butce-in[data-i="${i}"]`).value||0);
+  return sis?Math.abs(sec-sis)/sis:(sec?1:0);
+}
+function sapmaKontrol(){
+  document.querySelectorAll('.butce-in').forEach(inp=>{
+    const i=+inp.dataset.i;
+    const seb=document.querySelector(`.sebep-in[data-i="${i}"]`);
+    seb.classList.toggle('gerek', sapma(i)>META.uyari_esigi);
+  });
+}
+
+function oner(){
+  const s=$('#sektor').value, a=$('#amac').value, b=$('#butce').value;
+  const p=window.GH_VERI.planlar[anahtar(s,a,b)];
+  if(!p){$('#uyarilar').innerHTML='<div class="uyari kotu">✕ Bu kombinasyon anlık görüntüde yok.</div>';return;}
+  ciz(p);
+}
+
+function indir(){
+  // "sapabilir ama sebebini yazmak zorundadır" — eşik üstü sapmada sebep boşsa engelle
+  const eksik=[];
+  PLAN.satirlar.forEach((s,i)=>{
+    const seb=document.querySelector(`.sebep-in[data-i="${i}"]`).value.trim();
+    if(sapma(i)>META.uyari_esigi && !seb) eksik.push(s.yayinci);
+  });
+  const d=$('#durum');
+  if(eksik.length){d.className='durum hata';d.textContent='✕ Sapma sebebi yazılmamış yayıncılar var: '+eksik.join(', ');return;}
+  const zaman=new Date().toISOString().slice(0,19);
+  const satirlar=PLAN.satirlar.map((s,i)=>{
+    const sec=Number(document.querySelector(`.butce-in[data-i="${i}"]`).value||0);
+    return {yayinci:s.yayinci,grup:s.grup,reklam_modeli:s.reklam_modeli,ana_tur:s.ana_tur,tip:s.tip,
+      sistem_butce:s.sistem_butce,secilen_butce:sec,sistem_birim:s.oner,secilen_birim:s.oner,
+      sapma_butce:Math.round((sec-s.sistem_butce)*100)/100,sapma_birim:0,deneme:s.deneme,
+      sebep:document.querySelector(`.sebep-in[data-i="${i}"]`).value.trim(),
+      sebep_gerekli:sapma(i)>META.uyari_esigi};
+  });
+  const kayit={zaman,kullanici:'pages',tur:'secim',
+    oneri_id:`${PLAN.brief.sektor_l2}-${PLAN.brief.amac}-${PLAN.brief.toplam_butce}`,
+    brief:PLAN.brief,satirlar};
+  const metin=JSON.stringify(kayit)+'\n';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([metin],{type:'application/x-ndjson'}));
+  a.download=`karar-${zaman.replace(/[:T]/g,'-')}.jsonl`;
+  a.click();URL.revokeObjectURL(a.href);
+  d.className='durum ok';d.textContent='✓ JSONL indirildi. Bu dosya veri/kararlar/kararlar.jsonl defterine eklenmek üzere kullanılabilir.';
+}
+
+$('#oner').addEventListener('click',oner);
+$('#indir').addEventListener('click',indir);
+basla();
+</script>
+</body></html>

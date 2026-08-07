@@ -62,7 +62,24 @@ python3 skor.py /tmp/donusum.json .        # -> karne.json + Mecra_Karnesi.xlsx
 # 3) brief için mecra planı öner (fayda/maliyet)
 cd ../arayuz
 python3 oneri.py --sektor "İçecek" --amac "Gösterim almak" --butce 4200000
+
+# 4) canlı arayüzden test et (tarayıcı, sıfır bağımlılık)
+python3 sunucu.py                          # -> http://localhost:8000
 ```
+
+`sunucu.py` mockup'ın aksine gerçek motora bağlıdır: karneyi `karne.json`'dan okur, planı
+`oneri.py` ile üretir, sapma + sebebi karar defterine yazar. Tarayıcıdaki hiçbir sayı yeniden
+hesaplanmaz (K3); menüler karne + sözlükten dolar (K2). Eşik üstü sapmada sebep boşsa kayıt reddedilir.
+
+### Terminalsiz arayüz (GitHub Pages)
+
+Ekip için tıklanabilir bir URL — terminal gerekmez. Gerçek motor bir GitHub Action'da çalışıp
+sonuçları statik veriye döker (`arayuz/pages_uret.py` → `arayuz/pages/veri.js`); Pages onu gösterir.
+Sayılar yine Python'dan gelir (K3); tarayıcıda yeniden hesaplanmaz. Bütçe kademelidir; sapma + sebep
+tarayıcıda tutulur, JSONL olarak indirilir. Karne ya da sözlük değişince arayüz otomatik güncellenir.
+
+Bir kerelik kurulum: repo **Settings → Pages → Source: GitHub Actions**. Yerel önizleme için
+`python3 arayuz/pages_uret.py` sonra `arayuz/pages/index.html`.
 
 Karnenin kırılım seviyesi `sozluk.xlsx` → Parametreler → `karne_kirilim` ile seçilir:
 `ana tür` (varsayılan) ya da `reklam modeli` (skippable/bumper/masthead/trueview ayrı puanlanır).
